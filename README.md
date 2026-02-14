@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🗂️ Pagerr
+<img src="docs/logo.png" width="280" alt="Pagerr">
+
+# Pagerr
 
 **A PIN-protected homelab dashboard built for Tailscale — and anywhere else you self-host.**
 
