@@ -3,7 +3,7 @@ services:
     image: nginx:alpine
     container_name: pagerr
     ports:
-      - "8080:80"
+      - "8484:80"
     volumes:
       - ./pagerr.html:/usr/share/nginx/html/index.html:ro
     security_opt:
