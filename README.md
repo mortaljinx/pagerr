@@ -41,7 +41,7 @@ Pagerr is built with private, local-network access in mind. Here are the recomme
 The cleanest setup. Run Pagerr on your server and access it privately from any device on your tailnet — phone, tablet, laptop — without opening any ports or configuring DNS.
 
 ```
-http://your-tailscale-ip:8080
+http://your-tailscale-ip:8484
 ```
 
 No reverse proxy needed. Tailscale handles the secure tunnel.
@@ -52,7 +52,7 @@ If you already run a reverse proxy, Pagerr slots right in behind it. The `docker
 | Proxy | Notes |
 |---|---|
 | **Traefik** | Labels included in `docker-compose.yml` — just uncomment and set your domain |
-| **Caddy** | Point a `reverse_proxy` block at `localhost:8080` |
+| **Caddy** | Point a `reverse_proxy` block at `localhost:8484` |
 | **Nginx Proxy Manager** | Add a new proxy host pointing to your container |
 | **Nginx** | Standard `proxy_pass` to the container port |
 
@@ -66,7 +66,7 @@ cd pagerr
 docker compose up -d
 ```
 
-Then open `http://your-server-ip:8080` in your browser — or your Tailscale IP if accessing remotely.
+Then open `http://your-server-ip:8484` in your browser — or your Tailscale IP if accessing remotely.
 
 > On first launch you'll be prompted to set a PIN, and optionally a server name and logo.
 
@@ -76,10 +76,10 @@ Because Pagerr is a single HTML file you can serve it with any web server, or op
 
 ```bash
 # Python
-python3 -m http.server 8080
+python3 -m http.server 8484
 
 # Node
-npx serve . -p 8080
+npx serve . -p 8484
 ```
 
 ---
@@ -102,7 +102,7 @@ See [`docker-compose.yml`](docker-compose.yml) for the full template. Key defaul
 
 | Setting | Default | Description |
 |---|---|---|
-| Port | `8080` | Host port to access Pagerr |
+| Port | `8484` | Host port to access Pagerr |
 | Volume | `./pagerr.html:/usr/share/nginx/html/index.html:ro` | Mounts the app file |
 | Restart | `unless-stopped` | Auto-restarts with Docker |
 
