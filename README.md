@@ -19,6 +19,18 @@ Add your services, organise them into categories, and access everything from beh
 
 ---
 
+## 📸 Screenshots
+
+<div align="center">
+
+| Lock Screen | Dashboard (Dark) | Dashboard (Light) | Settings |
+|---|---|---|---|
+| <img src="docs/screenshot-lock.png" width="180"> | <img src="docs/screenshot-dark.png" width="180"> | <img src="docs/screenshot-light.png" width="180"> | <img src="docs/screenshot-settings.png" width="180"> |
+
+</div>
+
+---
+
 ## ✨ Features
 
 - **Single HTML file** — no build step, no database, no dependencies
