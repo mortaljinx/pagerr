@@ -1,6 +1,6 @@
 # Pagerr
 
-![Pagerr](docs/logo.png)
+<img src="docs/logo.png" width="200" alt="Pagerr">
 
 **A PIN-protected, single-file homelab dashboard.**
 
