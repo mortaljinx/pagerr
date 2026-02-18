@@ -1,6 +1,8 @@
-# Pagerr
+<div align="center">
 
 <img src="docs/logo.png" width="200" alt="Pagerr">
+
+# Pagerr
 
 **A PIN-protected, single-file homelab dashboard.**
 
@@ -12,6 +14,8 @@
 Pagerr is a single HTML file that gives you a clean, mobile-first dashboard for all your self-hosted services. No database. No backend. No accounts. Everything lives in your browser's `localStorage`.
 
 Built for Tailscale. Works behind any reverse proxy.
+
+</div>
 
 ---
 
