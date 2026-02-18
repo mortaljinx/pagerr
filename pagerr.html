@@ -450,6 +450,19 @@ body {
 
 .cat-edit-btn:hover { color: var(--accent); }
 
+.cat-reorder-btn {
+  font-size: 10px; color: var(--text3);
+  background: var(--surface); border: 1px solid var(--border);
+  cursor: pointer;
+  padding: 3px 8px; border-radius: 6px;
+  transition: all .15s;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.5px;
+}
+
+.cat-reorder-btn:hover { color: var(--accent); border-color: var(--accent); }
+.cat-reorder-btn.active { color: var(--accent); border-color: var(--accent); background: var(--accent-bg); }
+
 /* Service grid */
 .service-grid {
   display: grid;
@@ -986,6 +999,120 @@ body {
 .toggle-label input:checked + .toggle-track + .toggle-knob {
   transform: translateX(22px);
 }
+
+/* ═══════════════════════════════════════
+   V2 — DRAG & DROP REORDER
+═══════════════════════════════════════ */
+.reorder-mode-banner {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 310;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px; font-weight: 700;
+  text-align: center;
+  padding: 10px 16px;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  transform: translateY(-100%);
+  transition: transform .3s;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 1px;
+}
+
+.reorder-mode-banner.active { transform: translateY(0); }
+
+.reorder-done-btn {
+  background: rgba(255,255,255,0.25);
+  border: 1px solid rgba(255,255,255,0.4);
+  color: #fff;
+  font-size: 11px; font-weight: 700;
+  font-family: 'DM Mono', monospace;
+  padding: 4px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  letter-spacing: 1px;
+}
+
+.service-card.dragging {
+  opacity: 0.4;
+  transform: scale(0.95);
+}
+
+.service-card.drag-over {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px var(--accent-glow), 0 8px 20px var(--accent-glow) !important;
+}
+
+.service-card.reorder-active {
+  animation: wiggle 0.4s ease infinite alternate;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.service-card.reorder-selected {
+  animation: none;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--accent-glow), 0 8px 24px var(--accent-glow) !important;
+  transform: scale(1.06);
+  background: var(--accent-bg);
+}
+
+.service-card.reorder-active .drag-handle {
+  position: relative;
+}
+
+.service-card.reorder-active:not(.reorder-selected) .drag-handle::after {
+  content: '↕';
+  position: absolute;
+  top: -8px; right: -8px;
+  font-size: 10px;
+  background: var(--accent);
+  color: #fff;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+  line-height: 16px;
+  text-align: center;
+}
+
+@keyframes wiggle {
+  0%   { transform: rotate(-1.5deg) scale(1.02); }
+  100% { transform: rotate(1.5deg)  scale(1.02); }
+}
+
+/* ═══════════════════════════════════════
+   V2 — DATA SECTION IN SETTINGS
+═══════════════════════════════════════ */
+.data-btn-row {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.data-btn {
+  padding: 12px 8px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text2);
+  font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  text-align: center;
+  transition: all .15s;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+
+.data-btn:hover { border-color: var(--accent); color: var(--accent); }
+.data-btn-icon { font-size: 20px; }
+.data-btn-label { font-size: 10px; font-family: 'DM Mono', monospace; letter-spacing: 1px; }
+
+.data-btn.accent {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+  color: var(--accent);
+}
 </style>
 </head>
 <body>
@@ -1362,6 +1489,30 @@ body {
     <button class="btn-save" style="width:100%;" onclick="changePin()">Update PIN</button>
   </div>
 
+  <div class="settings-hr"></div>
+
+  <!-- V2: Data -->
+  <div class="settings-section">
+    <div class="settings-section-label">Data &amp; Transfer</div>
+    <div class="data-btn-row">
+      <button class="data-btn accent" onclick="exportConfig()">
+        <span class="data-btn-icon">⬇️</span>
+        <span class="data-btn-label">EXPORT JSON</span>
+      </button>
+      <button class="data-btn" onclick="triggerImport()">
+        <span class="data-btn-icon">⬆️</span>
+        <span class="data-btn-label">IMPORT JSON</span>
+      </button>
+    </div>
+    <input type="file" id="importFileInput" accept=".json,application/json" style="display:none;" onchange="importConfig(this.files[0])">
+  </div>
+
+</div>
+
+<!-- ═══ V2: REORDER BANNER ═══ -->
+<div class="reorder-mode-banner" id="reorderBanner">
+  ✦ REORDER MODE — tap a card, then tap where to swap it
+  <button class="reorder-done-btn" onclick="exitReorderMode()">DONE</button>
 </div>
 
 <!-- ═══ TOAST ═══ -->
@@ -2140,23 +2291,29 @@ function renderDash() {
   }
 
   var html = '';
+  var showedReorderBtn = false;
 
   state.categories.forEach(function(cat) {
     var catServices = state.services.filter(function(s) { return s.categoryId === cat.id; });
     html += '<div class="category-section">';
     html += '<div class="category-header">';
     html += '<div class="category-label">' + esc(cat.name) + '</div>';
+    html += '<div style="display:flex;gap:6px;align-items:center;">';
+    if (!showedReorderBtn && state.services.length > 1) {
+      html += '<button class="cat-reorder-btn" onclick="toggleReorderMode()" title="Reorder">⇅ reorder</button>';
+      showedReorderBtn = true;
+    }
     html += '<button class="cat-edit-btn" onclick="openAddServiceInCat(\'' + cat.id + '\')">+ add</button>';
+    html += '</div>';
     html += '</div>';
     html += '<div class="service-grid">';
 
     catServices.forEach(function(svc) {
-      var hasCred = !!state.credentials[svc.id];
-      html += '<div class="service-card" onclick="openService(\'' + svc.id + '\')" oncontextmenu="editService(\'' + svc.id + '\');return false;">';
+      html += '<div class="service-card" data-svc-id="' + esc(svc.id) + '" onclick="handleCardClick(event,\'' + svc.id + '\')" oncontextmenu="handleCardContext(event,\'' + svc.id + '\')">';
       if (svc.iconUrl) {
-        html += '<div class="card-icon-wrap ' + state.iconSize + '"><img src="' + esc(svc.iconUrl) + '" width="44" height="44" style="object-fit:contain;" onerror="this.parentNode.innerHTML=\'' + esc(getEmoji(svc.name)) + '\'"></div>';
+        html += '<div class="card-icon-wrap ' + state.iconSize + ' drag-handle" data-svc-id="' + esc(svc.id) + '"><img src="' + esc(svc.iconUrl) + '" width="44" height="44" style="object-fit:contain;-webkit-user-drag:none;pointer-events:none;" onerror="this.parentNode.innerHTML=\'' + esc(getEmoji(svc.name)) + '\'"></div>';
       } else {
-        html += '<div class="card-icon-wrap ' + state.iconSize + '" data-icon-name="' + esc(svc.name) + '"></div>';
+        html += '<div class="card-icon-wrap ' + state.iconSize + ' drag-handle" data-svc-id="' + esc(svc.id) + '" data-icon-name="' + esc(svc.name) + '"></div>';
       }
       html += '<div class="card-name text-' + state.textSize + (state.showLabels ? '' : ' hidden') + '">' + esc(svc.name) + '</div>';
       html += '</div>';
@@ -2757,8 +2914,154 @@ function closeFabMenu() {
 }
 
 /* ══════════════════════════════════════════
-   INIT
+   V2 ① — TAP-TO-SWAP REORDER
 ══════════════════════════════════════════ */
+var reorderMode = false;
+var reorderSelected = null; // id of first selected card
+
+// Card click/context handlers
+function handleCardClick(e, id) {
+  if (reorderMode) {
+    handleReorderTap(id);
+    return;
+  }
+  openService(id);
+}
+
+function handleCardContext(e, id) {
+  e.preventDefault();
+  if (reorderMode) return;
+  editService(id);
+}
+
+function handleReorderTap(id) {
+  if (!reorderSelected) {
+    // First tap — select this card
+    reorderSelected = id;
+    document.querySelectorAll('.service-card[data-svc-id]').forEach(function(card) {
+      card.classList.toggle('reorder-selected', card.getAttribute('data-svc-id') === id);
+    });
+    showToast('Now tap the card to swap with');
+  } else if (reorderSelected === id) {
+    // Tapped same card — deselect
+    reorderSelected = null;
+    document.querySelectorAll('.service-card[data-svc-id]').forEach(function(card) {
+      card.classList.remove('reorder-selected');
+    });
+  } else {
+    // Second tap — swap positions AND categories
+    swapServices(reorderSelected, id);
+    reorderSelected = null;
+    showToast('Swapped ✓');
+  }
+}
+
+function toggleReorderMode() {
+  if (reorderMode) {
+    exitReorderMode();
+  } else {
+    enterReorderMode();
+  }
+}
+
+function enterReorderMode() {
+  reorderMode = true;
+  reorderSelected = null;
+  document.getElementById('reorderBanner').classList.add('active');
+  document.querySelectorAll('.service-card[data-svc-id]').forEach(function(card) {
+    card.classList.add('reorder-active');
+  });
+  var btn = document.querySelector('.cat-reorder-btn');
+  if (btn) { btn.classList.add('active'); btn.textContent = '✓ done'; }
+}
+
+function exitReorderMode() {
+  reorderMode = false;
+  reorderSelected = null;
+  document.getElementById('reorderBanner').classList.remove('active');
+  document.querySelectorAll('.service-card[data-svc-id]').forEach(function(card) {
+    card.classList.remove('reorder-active', 'reorder-selected');
+  });
+  var btn = document.querySelector('.cat-reorder-btn');
+  if (btn) { btn.classList.remove('active'); btn.textContent = '⇅ reorder'; }
+}
+
+function swapServices(aId, bId) {
+  var ai = state.services.findIndex(function(s) { return s.id === aId; });
+  var bi = state.services.findIndex(function(s) { return s.id === bId; });
+  if (ai === -1 || bi === -1) return;
+  // Swap both position in array AND categoryId so cross-category moves work
+  var aCat = state.services[ai].categoryId;
+  var bCat = state.services[bi].categoryId;
+  var tmp = state.services[ai];
+  state.services[ai] = state.services[bi];
+  state.services[bi] = tmp;
+  state.services[ai].categoryId = aCat;
+  state.services[bi].categoryId = bCat;
+  save();
+  renderDash();
+}
+
+/* ══════════════════════════════════════════
+   V2 ② — JSON EXPORT / IMPORT
+══════════════════════════════════════════ */
+function exportConfig() {
+  var payload = {
+    version: 2,
+    exportedAt: Date.now(),
+    state: state
+  };
+  var json = JSON.stringify(payload, null, 2);
+  var blob = new Blob([json], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'pagerr-config.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Config exported ✓');
+  closeSettings();
+}
+
+function triggerImport() {
+  document.getElementById('importFileInput').value = '';
+  document.getElementById('importFileInput').click();
+}
+
+function importConfig(file) {
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var parsed = JSON.parse(e.target.result);
+      if (!parsed.version || !parsed.state) {
+        showToast('Invalid Pagerr config');
+        return;
+      }
+      if (!confirm('Replace current config with imported data? This cannot be undone.')) return;
+      state = parsed.state;
+      save();
+      showToast('Imported ✓ — reloading…');
+      setTimeout(function() { location.reload(); }, 800);
+    } catch (err) {
+      showToast('Import failed — invalid JSON');
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ══════════════════════════════════════════
+   V2 PATCH: re-apply reorder visuals after renderDash
+══════════════════════════════════════════ */
+var _origRenderDash = renderDash;
+renderDash = function() {
+  _origRenderDash();
+  if (reorderMode) {
+    document.querySelectorAll('.service-card[data-svc-id]').forEach(function(card) {
+      card.classList.add('reorder-active');
+    });
+  }
+};
 window.addEventListener('load', function() {
   load();
   setTheme(state.theme);
