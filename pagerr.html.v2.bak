@@ -1,0 +1,3078 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Pagerr</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════
+   CSS VARIABLES — DARK & LIGHT THEMES
+═══════════════════════════════════════ */
+:root {
+  --transition: .2s ease;
+}
+
+[data-theme="dark"] {
+  --bg:          #13151a;
+  --bg2:         #1a1d24;
+  --surface:     #1e2130;
+  --surface2:    #181b26;
+  --border:      #2a2f42;
+  --header-border: #2a2f42;
+  --border2:     #3a4060;
+  --text:        #e2e8f4;
+  --text2:       #a0b0c8;
+  --text3:       #7a8faa;
+  --accent:      #4d8eff;
+  --accent-glow: #4d8eff40;
+  --accent-bg:   #1a2a4a;
+  --card-icon-bg: #1e2130;
+  --header-bg:   #1e2130;
+  --lock-bg:     radial-gradient(ellipse at 50% -10%, #1a2040 0%, #13151a 60%);
+  --dash-bg:     #13151a;
+  --sheet-bg:    #1e2130;
+  --overlay-bg:  rgba(10,12,18,0.85);
+  --input-bg:    #181b26;
+  --logo-bg:     linear-gradient(145deg, #2a4a8e, #1a3070);
+  --logo-border: #3a5aae;
+  --bio-bg:      linear-gradient(145deg, #4d8eff, #2a5acc);
+  --numpad-bg:   #1e2130;
+  --wordmark:    #6a7aaa;
+  --divider:     #2a2f42;
+  --shadow:      0 30px 70px rgba(0,0,0,0.5);
+  --modal-shadow: 0 24px 60px rgba(0,0,0,0.4);
+  --toggle-off:  #6b3030;
+}
+
+[data-theme="light"] {
+  --bg:          #f1f5fb;
+  --bg2:         #e8eef8;
+  --surface:     #ffffff;
+  --surface2:    #f8fafc;
+  --border:      #e2e8f0;
+  --header-border: #e2e8f0;
+  --border2:     #cbd5e1;
+  --text:        #1e293b;
+  --text2:       #64748b;
+  --text3:       #94a3b8;
+  --accent:      #6366f1;
+  --accent-glow: #6366f144;
+  --accent-bg:   #eef2ff;
+  --card-icon-bg: linear-gradient(145deg, #eef2ff, #e0e7ff);
+  --header-bg:   #ffffffee;
+  --lock-bg:     linear-gradient(160deg, #f8faff 0%, #eef2ff 50%, #f0f4ff 100%);
+  --dash-bg:     #f1f5fb;
+  --sheet-bg:    #ffffff;
+  --overlay-bg:  rgba(241,245,251,0.85);
+  --input-bg:    #f8fafc;
+  --logo-bg:     linear-gradient(145deg, #6366f1, #4f46e5);
+  --logo-border: #818cf8;
+  --bio-bg:      linear-gradient(145deg, #6366f1, #4f46e5);
+  --numpad-bg:   #ffffff;
+  --wordmark:    #94a3b8;
+  --divider:     #e2e8f0;
+  --shadow:      0 30px 70px rgba(0,0,0,0.12);
+  --modal-shadow: 0 24px 60px rgba(0,0,0,0.15);
+  --toggle-off:  #f0a0a0;
+}
+
+/* ═══════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════ */
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html {
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  position: relative;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  transition: background var(--transition), color var(--transition);
+  overscroll-behavior-x: none;
+  overscroll-behavior-y: auto;
+}
+
+/* ═══════════════════════════════════════
+   LOCK SCREEN
+═══════════════════════════════════════ */
+#lockScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--lock-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: opacity .3s ease;
+}
+
+#lockScreen.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.lock-wordmark {
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: var(--wordmark);
+  margin-bottom: 20px;
+}
+
+.lock-logo {
+  width: 180px; height: 180px;
+  border-radius: 40px;
+  background: var(--logo-bg);
+  border: 1px solid var(--logo-border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 84px;
+  margin-bottom: 20px;
+  box-shadow: 0 0 30px var(--accent-glow), 0 8px 24px rgba(0,0,0,0.2);
+}
+
+.lock-title {
+  font-size: 24px; font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.lock-sub {
+  font-size: 14px; color: var(--text3);
+  text-align: center; line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+/* Setup screen */
+#setupScreen { display: none; width: 100%; max-width: 280px; text-align: center; flex-direction: column; align-items: center; }
+#setupScreen.active { display: flex; }
+
+/* Unlock screen */
+#unlockScreen { display: none; width: 100%; max-width: 280px; text-align: center; flex-direction: column; align-items: center; }
+#unlockScreen.active { display: flex; }
+
+
+.bio-btn {
+  width: 68px; height: 68px;
+  border-radius: 50%;
+  background: var(--bio-bg);
+  border: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px var(--accent-glow);
+  transition: transform .15s, box-shadow .15s;
+}
+
+.bio-btn:active { transform: scale(0.93); }
+
+.bio-label {
+  font-size: 9px; color: var(--text3);
+  margin-bottom: 24px;
+  font-family: 'DM Mono', monospace; letter-spacing: 1.5px;
+}
+
+.pin-divider {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; margin-bottom: 20px;
+}
+.pin-divider-line { flex: 1; height: 1px; background: var(--divider); }
+.pin-divider-text { font-size: 9px; color: var(--text3); font-family: 'DM Mono', monospace; letter-spacing: 1px; }
+
+.pin-dots {
+  display: flex; gap: 14px;
+  margin-bottom: 20px;
+}
+
+.pin-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border2);
+  background: transparent;
+  transition: background .15s, box-shadow .15s;
+}
+
+.pin-dot.filled {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+.num-key {
+  height: 46px;
+  border-radius: 12px;
+  background: var(--numpad-bg);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 600;
+  color: var(--text2);
+  cursor: pointer;
+  transition: background .1s, transform .1s;
+  user-select: none;
+}
+
+.num-key:active { transform: scale(0.93); background: var(--accent-bg); }
+.num-key.action { color: var(--accent); font-size: 20px; }
+
+.lock-msg {
+  margin-top: 14px;
+  font-size: 12px; color: #e05555;
+  min-height: 18px;
+  font-family: 'DM Mono', monospace;
+}
+
+.setup-input {
+  width: 100%;
+  padding: 14px;
+  font-size: 20px;
+  text-align: center;
+  letter-spacing: 8px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border2);
+  background: var(--input-bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 12px;
+  outline: none;
+  transition: border-color .2s;
+}
+
+.setup-input:focus { border-color: var(--accent); }
+
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 15px; font-weight: 700;
+  cursor: pointer;
+  transition: opacity .15s, transform .15s;
+  font-family: 'DM Sans', sans-serif;
+  box-shadow: 0 4px 16px var(--accent-glow);
+}
+
+.btn-primary:active { transform: scale(0.97); opacity: 0.9; }
+
+/* ═══════════════════════════════════════
+   MAIN CONTENT
+═══════════════════════════════════════ */
+#app {
+  display: none;
+  flex-direction: column;
+  min-height: 100vh;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+
+#app.visible { display: flex; }
+
+/* Header */
+.app-header {
+  position: sticky; top: 0; z-index: 100;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 12px 16px;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--header-border);
+  transition: background var(--transition);
+  gap: 8px;
+}
+
+/* Left — server logo + name */
+.header-left {
+  display: flex; align-items: center; gap: 10px;
+  justify-content: flex-start;
+  min-width: 0;
+}
+
+.server-logo-wrap {
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; cursor: pointer; flex-shrink: 0;
+  overflow: hidden;
+  transition: border-color .15s;
+  position: relative;
+}
+
+.server-logo-wrap:hover { border-color: var(--accent); }
+.server-logo-wrap img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
+.server-logo-wrap input[type=file] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+
+.server-name-wrap {
+  display: flex; flex-direction: column; min-width: 0;
+}
+
+.server-name {
+  font-size: 16px; font-weight: 700;
+  color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  cursor: pointer;
+  border: none; background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  padding: 0; outline: none;
+  max-width: 130px;
+}
+
+.server-name-hint { display: none; }
+
+/* Centre — Pagerr branding */
+.header-centre {
+  display: flex; align-items: center; justify-content: center;
+}
+
+.app-name {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px; letter-spacing: 4px;
+  color: var(--text3); font-weight: 500;
+  text-transform: uppercase;
+}
+
+/* Right — action buttons */
+.header-right {
+  display: flex; gap: 8px;
+  justify-content: flex-end;
+}
+
+.icon-btn {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; cursor: pointer;
+  transition: border-color .15s, transform .1s;
+}
+
+.icon-btn:active { transform: scale(0.93); }
+.icon-btn:hover { border-color: var(--accent); }
+
+/* Dashboard body */
+.dash-body {
+  overflow-x: hidden;
+  width: 100%;
+  flex: 1;
+  padding: 8px 0 100px;
+  background: var(--dash-bg);
+  transition: background var(--transition);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  text-align: center;
+  gap: 14px;
+}
+
+.empty-icon {
+  font-size: 52px; opacity: 0.3;
+}
+
+.empty-title { font-size: 17px; font-weight: 600; color: var(--text2); }
+.empty-sub { font-size: 13px; color: var(--text3); line-height: 1.6; max-width: 240px; }
+
+.add-first-btn {
+  margin-top: 8px;
+  display: flex; align-items: center; gap: 8px;
+  padding: 13px 24px;
+  border-radius: 14px;
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  font-size: 14px; font-weight: 700;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  box-shadow: 0 4px 16px var(--accent-glow);
+  transition: opacity .15s, transform .15s;
+}
+
+.add-first-btn:active { transform: scale(0.97); opacity: 0.9; }
+
+/* Category */
+.category-section { margin-bottom: 4px; }
+
+.category-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px 4px;
+}
+
+.category-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text2);
+  font-weight: 600;
+}
+
+.cat-edit-btn {
+  font-size: 11px; color: var(--text3);
+  background: none; border: none; cursor: pointer;
+  padding: 4px 6px; border-radius: 6px;
+  transition: color .15s;
+  font-family: 'DM Mono', monospace;
+  display: none;
+}
+
+.cat-edit-btn:hover { color: var(--accent); }
+
+.cat-reorder-btn {
+  font-size: 10px; color: var(--text3);
+  background: var(--surface); border: 1px solid var(--border);
+  cursor: pointer;
+  padding: 3px 8px; border-radius: 6px;
+  transition: all .15s;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.5px;
+}
+
+.cat-reorder-btn:hover { color: var(--accent); border-color: var(--accent); }
+.cat-reorder-btn.active { color: var(--accent); border-color: var(--accent); background: var(--accent-bg); }
+
+/* Service grid */
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+  padding: 6px 12px 10px;
+}
+
+@media (min-width: 600px) {
+  .service-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+}
+
+@media (min-width: 1024px) {
+  .service-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+  .app-header { padding: 14px 24px; }
+  .dash-body { padding: 8px 12px 100px; }
+}
+
+.service-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 8px 14px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--text);
+  position: relative;
+  transition: border-color .15s, transform .15s, box-shadow .15s;
+}
+
+.service-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px var(--accent-glow);
+}
+
+.service-card:active { transform: scale(0.96); }
+
+.card-icon-wrap {
+  width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px;
+  overflow: visible;
+  transition: width .2s, height .2s, font-size .2s;
+}
+
+.card-icon-wrap.small {
+  width: 36px; height: 36px;
+  font-size: 28px;
+}
+
+.card-icon-wrap.medium {
+  width: 48px; height: 48px;
+  font-size: 36px;
+}
+
+.card-icon-wrap.large {
+  width: 64px; height: 64px;
+  font-size: 48px;
+}
+
+.card-icon-wrap img {
+  width: 44px; height: 44px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+  transition: width .2s, height .2s;
+}
+
+.card-icon-wrap.small img {
+  width: 32px; height: 32px;
+}
+
+.card-icon-wrap.medium img {
+  width: 44px; height: 44px;
+}
+
+.card-icon-wrap.large img {
+  width: 58px; height: 58px;
+}
+
+.card-name {
+  font-size: 12px; font-weight: 600;
+  color: var(--text2);
+  text-align: center;
+  line-height: 1.3;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.card-name.text-small  { font-size: 10px; }
+.card-name.text-medium { font-size: 12px; }
+.card-name.text-large  { font-size: 15px; }
+
+.card-name.hidden {
+  display: none;
+}
+
+.card-key-badge {
+  position: absolute; top: 6px; right: 6px;
+  font-size: 10px; opacity: 0.5;
+}
+
+.add-card {
+  background: transparent;
+  border: 1.5px dashed var(--border);
+  border-radius: 14px;
+  padding: 14px 8px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: border-color .15s;
+  min-height: 80px;
+}
+
+.add-card:hover { border-color: var(--accent); }
+.add-card-plus { font-size: 20px; color: var(--border2); line-height: 1; }
+.add-card-txt { font-size: 9px; color: var(--text3); font-family: 'DM Mono', monospace; }
+
+/* Floating + button */
+.fab {
+  position: fixed;
+  bottom: 24px; right: 20px;
+  width: 54px; height: 54px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  font-size: 26px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 20px var(--accent-glow), 0 8px 30px rgba(0,0,0,0.2);
+  z-index: 200;
+  transition: transform .15s, box-shadow .15s;
+}
+
+.fab:active { transform: scale(0.93); }
+
+/* ═══════════════════════════════════════
+   BOTTOM SHEET / MODAL
+═══════════════════════════════════════ */
+.sheet-overlay {
+  position: fixed; inset: 0; z-index: 600;
+  background: var(--overlay-bg);
+  backdrop-filter: blur(6px);
+  display: none; opacity: 0;
+  transition: opacity .25s;
+}
+
+.sheet-overlay.active { display: block; }
+.sheet-overlay.visible { opacity: 1; }
+
+.bottom-sheet {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 601;
+  max-width: 100vw;
+  overflow-x: hidden;
+  background: var(--sheet-bg);
+  border-radius: 24px 24px 0 0;
+  border-top: 1px solid var(--border);
+  padding: 14px 20px 40px;
+  transform: translateY(100%);
+  transition: transform .3s cubic-bezier(.32,0,.15,1);
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--modal-shadow);
+}
+
+.bottom-sheet.open { transform: translateY(0); }
+
+.sheet-handle {
+  width: 40px; height: 4px;
+  background: var(--border2);
+  border-radius: 2px;
+  margin: 0 auto 18px;
+}
+
+.sheet-title {
+  font-size: 17px; font-weight: 700;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+/* Form elements */
+.form-group { margin-bottom: 16px; }
+
+.form-label {
+  display: block;
+  font-size: 10px; font-weight: 600;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 6px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  transition: border-color .2s;
+}
+
+.form-input:focus { border-color: var(--accent); }
+
+.form-select {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  transition: border-color .2s;
+}
+
+.form-select:focus { border-color: var(--accent); }
+
+/* Icon preview row */
+.icon-preview-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px;
+  background: var(--input-bg);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.icon-preview {
+  width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; flex-shrink: 0;
+  overflow: visible;
+}
+
+.icon-preview img { width: 44px; height: 44px; object-fit: contain; }
+
+.icon-preview-info { flex: 1; }
+.icon-preview-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.icon-preview-hint { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+/* Login type chips */
+.type-chips {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+
+.type-chip {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text3);
+  font-size: 11px; font-weight: 600;
+  font-family: 'DM Mono', monospace;
+  cursor: pointer;
+  transition: all .15s;
+  user-select: none;
+}
+
+.type-chip:hover { border-color: var(--accent); color: var(--accent); }
+.type-chip.selected { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+
+/* Sheet actions */
+.sheet-actions {
+  display: flex; gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-secondary {
+  flex: 1; padding: 13px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text2);
+  font-size: 14px; font-weight: 600;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  transition: border-color .15s;
+}
+
+.btn-secondary:hover { border-color: var(--accent); }
+
+.btn-save {
+  flex: 2; padding: 13px;
+  border-radius: 12px; border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px; font-weight: 700;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  box-shadow: 0 4px 14px var(--accent-glow);
+  transition: opacity .15s, transform .15s;
+}
+
+.btn-save:active { transform: scale(0.97); opacity: 0.9; }
+
+.btn-danger-sm {
+  padding: 8px 14px;
+  border-radius: 10px; border: none;
+  background: rgba(220,50,50,0.15);
+  color: #e05555;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  transition: background .15s;
+}
+
+.btn-danger-sm:hover { background: rgba(220,50,50,0.25); }
+
+/* ═══════════════════════════════════════
+   SETTINGS PANEL (right slide-in)
+═══════════════════════════════════════ */
+.settings-panel {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: min(340px, 100vw);
+  z-index: 550;
+  background: var(--sheet-bg);
+  border-left: 1px solid var(--border);
+  padding: 60px 20px 40px;
+  transform: translateX(100%);
+  transition: transform .3s cubic-bezier(.32,0,.15,1);
+  overflow-y: auto;
+  box-shadow: var(--modal-shadow);
+  display: flex; flex-direction: column; gap: 24px;
+}
+
+.settings-panel.open { transform: translateX(0); }
+
+.settings-title {
+  font-size: 18px; font-weight: 700;
+  color: var(--text);
+}
+
+.settings-close {
+  position: absolute; top: 16px; right: 16px;
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; cursor: pointer; color: var(--text2);
+}
+
+.settings-section { display: flex; flex-direction: column; gap: 10px; }
+
+.settings-section-label {
+  font-size: 10px; font-weight: 600;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text3);
+}
+
+/* Theme toggle */
+.theme-toggle {
+  display: flex;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.theme-opt {
+  flex: 1; padding: 10px;
+  border-radius: 9px;
+  border: none; background: transparent;
+  color: var(--text2);
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  transition: all .15s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+
+.theme-opt.active {
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border: 1px solid var(--border);
+}
+
+/* Timeout selector */
+.timeout-options {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.timeout-opt {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text2);
+  font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  text-align: center;
+  transition: all .15s;
+}
+
+.timeout-opt.active {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+/* Category list in settings */
+.cat-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.cat-item-name { font-size: 13px; font-weight: 600; color: var(--text); }
+
+.settings-hr { height: 1px; background: var(--border); }
+
+/* Credential list */
+.cred-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.cred-item-info { flex: 1; }
+.cred-item-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.cred-item-user { font-size: 11px; color: var(--text3); margin-top: 2px; font-family: 'DM Mono', monospace; }
+
+.cred-type-badge {
+  font-size: 9px;
+  font-family: 'DM Mono', monospace;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  border: 1px solid var(--border2);
+  margin-left: 8px;
+}
+
+/* Toast notification */
+.toast {
+  position: fixed;
+  bottom: 90px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-size: 13px; font-weight: 600;
+  color: var(--text);
+  z-index: 600;
+  opacity: 0;
+  transition: opacity .2s, transform .2s;
+  white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Timeout warning banner */
+.timeout-banner {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 300;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px; font-weight: 600;
+  text-align: center;
+  padding: 10px;
+  transform: translateY(-100%);
+  transition: transform .3s;
+}
+
+.timeout-banner.show { transform: translateY(0); }
+
+/* Toggle switch */
+.toggle-label {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.toggle-label input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-track {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #b03030;
+  border-radius: 26px;
+  transition: background .3s;
+}
+
+.toggle-knob {
+  position: absolute;
+  cursor: pointer;
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: transform .3s;
+  pointer-events: none;
+}
+
+.toggle-label input:checked + .toggle-track {
+  background: #22c55e;
+}
+
+.toggle-label input:checked + .toggle-track + .toggle-knob {
+  transform: translateX(22px);
+}
+
+/* ═══════════════════════════════════════
+   V2 — DRAG & DROP REORDER
+═══════════════════════════════════════ */
+.reorder-mode-banner {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 310;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px; font-weight: 700;
+  text-align: center;
+  padding: 10px 16px;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  transform: translateY(-100%);
+  transition: transform .3s;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 1px;
+}
+
+.reorder-mode-banner.active { transform: translateY(0); }
+
+.reorder-done-btn {
+  background: rgba(255,255,255,0.25);
+  border: 1px solid rgba(255,255,255,0.4);
+  color: #fff;
+  font-size: 11px; font-weight: 700;
+  font-family: 'DM Mono', monospace;
+  padding: 4px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  letter-spacing: 1px;
+}
+
+.service-card.dragging {
+  opacity: 0.4;
+  transform: scale(0.95);
+}
+
+.service-card.drag-over {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px var(--accent-glow), 0 8px 20px var(--accent-glow) !important;
+}
+
+.service-card.reorder-active {
+  animation: wiggle 0.4s ease infinite alternate;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.service-card.reorder-selected {
+  animation: none;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--accent-glow), 0 8px 24px var(--accent-glow) !important;
+  transform: scale(1.06);
+  background: var(--accent-bg);
+}
+
+.service-card.reorder-active .drag-handle {
+  position: relative;
+}
+
+.service-card.reorder-active:not(.reorder-selected) .drag-handle::after {
+  content: '↕';
+  position: absolute;
+  top: -8px; right: -8px;
+  font-size: 10px;
+  background: var(--accent);
+  color: #fff;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+  line-height: 16px;
+  text-align: center;
+}
+
+@keyframes wiggle {
+  0%   { transform: rotate(-1.5deg) scale(1.02); }
+  100% { transform: rotate(1.5deg)  scale(1.02); }
+}
+
+/* ═══════════════════════════════════════
+   V2 — DATA SECTION IN SETTINGS
+═══════════════════════════════════════ */
+.data-btn-row {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.data-btn {
+  padding: 12px 8px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text2);
+  font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  text-align: center;
+  transition: all .15s;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+
+.data-btn:hover { border-color: var(--accent); color: var(--accent); }
+.data-btn-icon { font-size: 20px; }
+.data-btn-label { font-size: 10px; font-family: 'DM Mono', monospace; letter-spacing: 1px; }
+
+.data-btn.accent {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOCK SCREEN ═══ -->
+<div id="lockScreen">
+
+  <!-- Setup PIN (first boot) -->
+  <div id="setupScreen">
+    <div class="lock-wordmark">PAGERR</div>
+
+    <!-- Server logo upload on setup screen -->
+    <div id="setupLogoWrap" style="
+      width:140px;height:140px;border-radius:32px;
+      background:var(--surface);border:2px dashed var(--border2);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      margin-bottom:16px;cursor:pointer;position:relative;overflow:hidden;
+      font-size:64px;transition:border-color .2s;
+    " title="Tap to upload server logo">
+      <span id="setupLogoEmoji">🖥️</span>
+      <img id="setupLogoImg" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:30px;" alt="">
+      <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:1px;margin-top:6px;" id="setupLogoHint">add logo</div>
+      <input type="file" accept="image/*" onchange="onSetupLogoUpload(event)"
+        style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;">
+    </div>
+
+    <!-- Server name on setup screen -->
+    <input type="text" id="setupServerName"
+      style="
+        width:100%;max-width:280px;padding:10px 14px;margin-bottom:20px;
+        border-radius:10px;border:1.5px solid var(--border);
+        background:var(--input-bg);color:var(--text);
+        font-size:15px;font-weight:600;text-align:center;
+        font-family:'DM Sans',sans-serif;outline:none;
+      "
+      placeholder="Server name (e.g. Home Server)"
+      onfocus="this.style.borderColor='var(--accent)'"
+      onblur="this.style.borderColor='var(--border)'">
+
+    <div class="lock-title">Set your PIN</div>
+    <div class="lock-sub" style="margin-bottom:20px;">Protects access to your dashboard</div>
+    <input class="setup-input" type="tel" id="newPin" maxlength="6" placeholder="New PIN">
+    <input class="setup-input" type="tel" id="confirmPin" maxlength="6" placeholder="Confirm PIN">
+    <button class="btn-primary" onclick="doSetupPin()">Continue →</button>
+    <div class="lock-msg" id="setupMsg"></div>
+  </div>
+
+  <!-- Unlock -->
+  <div id="unlockScreen">
+    <div class="lock-wordmark">PAGERR</div>
+    <div class="lock-logo" id="lockLogo" style="overflow:hidden;cursor:pointer;position:relative;" title="Tap to change logo">
+      <span id="lockLogoEmoji">⚡</span>
+      <img id="lockLogoImg" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:30px;" alt="">
+      <input type="file" accept="image/*" onchange="onLockLogoUpload(event)"
+        style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;">
+    </div>
+    <input type="text" id="lockServerName"
+      style="
+        font-size:22px;font-weight:700;color:var(--text);
+        background:transparent;border:none;outline:none;
+        text-align:center;font-family:'DM Sans',sans-serif;
+        margin-bottom:8px;cursor:pointer;
+        border-bottom:1px dashed transparent;transition:border-color .2s;
+        max-width:260px;
+      "
+      value="My Server"
+      onfocus="this.style.borderBottomColor='var(--accent)'"
+      onblur="this.style.borderBottomColor='transparent';saveLockServerName(this.value)"
+      onkeydown="if(event.key==='Enter')this.blur()"
+      title="Tap to edit server name">
+    <div class="lock-sub">Authenticate to access<br>your server dashboard</div>
+
+    <!-- Biometric view — shown when WebAuthn is available -->
+    <div id="bioView" style="display:none;flex-direction:column;align-items:center;width:100%;">
+      <button id="bioBtn" onclick="doBiometric()" style="
+        width:80px;height:80px;border-radius:50%;
+        background:var(--bio-bg);border:none;
+        display:flex;align-items:center;justify-content:center;
+        font-size:36px;cursor:pointer;margin-bottom:10px;
+        box-shadow:0 4px 24px var(--accent-glow);
+        transition:transform .15s,box-shadow .15s;
+      ">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/>
+          <path d="M14 13.12c0 2.38 0 6.38-1 8.88"/>
+          <path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/>
+          <path d="M2 12a10 10 0 0 1 18-6"/>
+          <path d="M2 17c1 .5 2.31 1.32 3.5 1"/>
+          <path d="M20.56 18c.21-.66.42-1.68.44-2"/>
+          <path d="M6.67 15.77c1 .23 2 .5 3 .73"/>
+          <path d="M8 13.13V13a4 4 0 0 1 8 0v3"/>
+          <path d="M8.5 21c1 .5 2 .5 3 .5"/>
+          <path d="M9 6.8a6 6 0 0 1 9 5.2v2"/>
+        </svg>
+      </button>
+      <div style="font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:1.5px;margin-bottom:20px;" id="bioLabel">TOUCH TO UNLOCK</div>
+      <button onclick="showPinFallback()" style="
+        background:none;border:none;font-size:11px;color:var(--text3);
+        font-family:'DM Mono',monospace;letter-spacing:1px;cursor:pointer;
+        text-decoration:underline;text-underline-offset:3px;padding:4px 8px;
+      ">Use PIN instead</button>
+      <div class="lock-msg" id="bioMsg"></div>
+    </div>
+
+    <!-- PIN view — shown as fallback or when biometrics unavailable -->
+    <div id="pinView" style="display:none;flex-direction:column;align-items:center;width:100%;">
+      <div class="pin-dots" id="pinDots" style="margin-bottom:14px;">
+        <div class="pin-dot" id="d0"></div>
+        <div class="pin-dot" id="d1"></div>
+        <div class="pin-dot" id="d2"></div>
+        <div class="pin-dot" id="d3"></div>
+      </div>
+      <div class="numpad">
+        <div class="num-key" onclick="numPress('1')">1</div>
+        <div class="num-key" onclick="numPress('2')">2</div>
+        <div class="num-key" onclick="numPress('3')">3</div>
+        <div class="num-key" onclick="numPress('4')">4</div>
+        <div class="num-key" onclick="numPress('5')">5</div>
+        <div class="num-key" onclick="numPress('6')">6</div>
+        <div class="num-key" onclick="numPress('7')">7</div>
+        <div class="num-key" onclick="numPress('8')">8</div>
+        <div class="num-key" onclick="numPress('9')">9</div>
+        <div class="num-key action" onclick="numPress('del')">⌫</div>
+        <div class="num-key" onclick="numPress('0')">0</div>
+        <div class="num-key action" onclick="numPress('ok')">↵</div>
+      </div>
+      <div class="lock-msg" id="unlockMsg"></div>
+      <button id="bioFallbackBtn" onclick="showBioView()" style="
+        display:none;margin-top:16px;
+        background:none;border:none;font-size:11px;color:var(--text3);
+        font-family:'DM Mono',monospace;letter-spacing:1px;cursor:pointer;
+        text-decoration:underline;text-underline-offset:3px;padding:4px 8px;
+      ">Use fingerprint instead</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ TIMEOUT BANNER ═══ -->
+<div class="timeout-banner" id="timeoutBanner">
+  ⏱ Locking soon due to inactivity — tap to stay unlocked
+</div>
+
+<!-- ═══ MAIN APP ═══ -->
+<div id="app">
+
+  <header class="app-header">
+    <div class="header-left">
+      <div class="server-logo-wrap" title="Tap to change server logo">
+        <span id="serverLogoEmoji">🖥️</span>
+        <img id="serverLogoImg" style="display:none;" alt="Server logo">
+        <input type="file" accept="image/*" onchange="onLogoUpload(event)" title="Upload server logo">
+      </div>
+      <div class="server-name-wrap">
+        <input class="server-name" id="serverNameInput" value="My Server"
+          onblur="saveServerName()" onkeydown="if(event.key==='Enter')this.blur()"
+          maxlength="20" placeholder="tap to change">
+      </div>
+    </div>
+    <div class="header-centre">
+      <div class="app-name">PAGERR</div>
+    </div>
+    <div class="header-right">
+      <div class="icon-btn" onclick="lockApp()" title="Lock">🔒</div>
+      <div class="icon-btn" onclick="openSettings()" title="Settings">⚙️</div>
+    </div>
+  </header>
+
+  <div class="dash-body" id="dashBody">
+    <!-- rendered by JS -->
+  </div>
+
+</div>
+
+<!-- ═══ FAB ═══ -->
+<button class="fab" id="fab" onclick="toggleFabMenu()" style="display:none;">＋</button>
+
+<!-- FAB action menu -->
+<div id="fabMenu" style="
+  position:fixed; bottom:90px; right:20px; z-index:201;
+  display:none; flex-direction:column; gap:10px; align-items:flex-end;
+">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span style="background:var(--surface);border:1px solid var(--border);padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.15);">Add Service</span>
+    <button onclick="fabAction('service')" style="width:44px;height:44px;border-radius:50%;border:none;background:var(--accent);color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 14px var(--accent-glow);display:flex;align-items:center;justify-content:center;">＋</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span style="background:var(--surface);border:1px solid var(--border);padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;color:var(--text2);white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.15);">Add Category</span>
+    <button onclick="fabAction('category')" style="width:44px;height:44px;border-radius:50%;border:none;background:var(--surface);border:1px solid var(--border);color:var(--accent);font-size:20px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:center;">🗂️</button>
+  </div>
+</div>
+
+<!-- ═══ SHEET OVERLAY ═══ -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="closeAllSheets();closeFabMenu();"></div>
+<div class="sheet-overlay" id="settingsDim" onclick="closeSettings()" style="z-index:549;"></div>
+
+<!-- ═══ ADD/EDIT SERVICE SHEET ═══ -->
+<div class="bottom-sheet" id="serviceSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title" id="serviceSheetTitle">Add Service</div>
+
+  <!-- Icon preview -->
+  <div class="icon-preview-row">
+    <div class="icon-preview" id="iconPreview">🌐</div>
+    <div class="icon-preview-info">
+      <div class="icon-preview-name" id="iconPreviewName">Type a service name</div>
+      <div class="icon-preview-hint" id="iconPreviewHint">Icon auto-matches as you type</div>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Service Name</label>
+    <input class="form-input" type="text" id="svcName" placeholder="e.g. Radarr" oninput="onNameInput(this.value)">
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Custom Icon URL <span style="font-size:10px;color:var(--text3);font-family:'DM Sans';text-transform:none;letter-spacing:0;font-weight:400;">— optional, overrides auto icon</span></label>
+    <input class="form-input" type="url" id="svcIconUrl" placeholder="https://example.com/icon.png" oninput="onIconUrlInput(this.value)">
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">URL</label>
+    <input class="form-input" type="url" id="svcUrl" placeholder="http://server:3001">
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Category</label>
+    <select class="form-select" id="svcCategory">
+      <!-- populated by JS -->
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Login Type</label>
+    <div class="type-chips" id="loginTypeChips">
+      <div class="type-chip selected" data-type="none" onclick="selectLoginType('none')">None</div>
+      <div class="type-chip" data-type="arr" onclick="selectLoginType('arr')">Arr Stack</div>
+      <div class="type-chip" data-type="sabnzbd" onclick="selectLoginType('sabnzbd')">SABnzbd</div>
+      <div class="type-chip" data-type="qbit" onclick="selectLoginType('qbit')">qBittorrent</div>
+      <div class="type-chip" data-type="deluge" onclick="selectLoginType('deluge')">Deluge</div>
+      <div class="type-chip" data-type="transmission" onclick="selectLoginType('transmission')">Transmission</div>
+      <div class="type-chip" data-type="nzbget" onclick="selectLoginType('nzbget')">NZBGet</div>
+      <div class="type-chip" data-type="tautulli" onclick="selectLoginType('tautulli')">Tautulli</div>
+      <div class="type-chip" data-type="pihole" onclick="selectLoginType('pihole')">Pi-hole</div>
+      <div class="type-chip" data-type="wizarr" onclick="selectLoginType('wizarr')">Wizarr</div>
+    </div>
+  </div>
+
+  <div id="credFields" style="display:none;">
+    <div class="form-group">
+      <label class="form-label">Username</label>
+      <input class="form-input" type="text" id="svcUser" placeholder="Username" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input class="form-input" type="password" id="svcPass" placeholder="Password" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="sheet-actions">
+    <button class="btn-secondary" onclick="closeAllSheets()">Cancel</button>
+    <button class="btn-save" onclick="saveService()">Save Service</button>
+  </div>
+
+  <div style="margin-top:12px;" id="deleteServiceBtn" style="display:none;">
+    <button class="btn-danger-sm" style="width:100%;" onclick="deleteCurrentService()">Delete Service</button>
+  </div>
+</div>
+
+<!-- ═══ ADD CATEGORY SHEET ═══ -->
+<div class="bottom-sheet" id="categorySheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">Add Category</div>
+  <div class="form-group">
+    <label class="form-label">Category Name</label>
+    <input class="form-input" type="text" id="catName" placeholder="e.g. Media Management">
+  </div>
+  <div class="sheet-actions">
+    <button class="btn-secondary" onclick="closeAllSheets()">Cancel</button>
+    <button class="btn-save" onclick="saveCategory()">Add Category</button>
+  </div>
+</div>
+
+<!-- ═══ SETTINGS PANEL ═══ -->
+<div class="settings-panel" id="settingsPanel">
+  <button class="settings-close" onclick="closeSettings()">×</button>
+  <div class="settings-title">Settings</div>
+
+  <!-- Theme -->
+  <div class="settings-section">
+    <div class="settings-section-label">Theme</div>
+    <div class="theme-toggle">
+      <button class="theme-opt" id="themeLight" onclick="setTheme('light')">☀️ Light</button>
+      <button class="theme-opt active" id="themeDark" onclick="setTheme('dark')">🌙 Dark</button>
+    </div>
+  </div>
+
+  <div class="settings-hr"></div>
+
+  <!-- Show labels toggle -->
+  <div class="settings-section">
+    <div class="settings-section-label">Display Options</div>
+    
+    <!-- Service Labels Toggle -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);">Service Labels</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px;">Show names below icons</div>
+      </div>
+      <label class="toggle-label">
+        <input type="checkbox" id="labelsToggle" onchange="toggleLabels()">
+        <span class="toggle-track"></span>
+        <span class="toggle-knob"></span>
+      </label>
+    </div>
+    
+    <!-- Icon Size Selector -->
+    <div style="margin-top:10px;">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:8px;font-family:'DM Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;">Icon Size</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;" id="iconSizeOpts">
+        <div class="timeout-opt" data-size="small" onclick="setIconSize('small')" style="text-align:center;">Small</div>
+        <div class="timeout-opt active" data-size="medium" onclick="setIconSize('medium')" style="text-align:center;">Medium</div>
+        <div class="timeout-opt" data-size="large" onclick="setIconSize('large')" style="text-align:center;">Large</div>
+      </div>
+    </div>
+
+    <!-- Text Size Selector -->
+    <div style="margin-top:10px;">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:8px;font-family:'DM Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;">Text Size</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;" id="textSizeOpts">
+        <div class="timeout-opt" data-size="small" onclick="setTextSize('small')" style="text-align:center;">Small</div>
+        <div class="timeout-opt active" data-size="medium" onclick="setTextSize('medium')" style="text-align:center;">Medium</div>
+        <div class="timeout-opt" data-size="large" onclick="setTextSize('large')" style="text-align:center;">Large</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="settings-hr"></div>
+
+  <!-- Lock timeout -->
+  <div class="settings-section">
+    <div class="settings-section-label">Auto-Lock Timeout</div>
+    <div class="timeout-options" id="timeoutOpts">
+      <div class="timeout-opt" data-val="0" onclick="setTimeout_('0')">Never</div>
+      <div class="timeout-opt active" data-val="10" onclick="setTimeout_('10')">10 min</div>
+      <div class="timeout-opt" data-val="30" onclick="setTimeout_('30')">30 min</div>
+      <div class="timeout-opt" data-val="60" onclick="setTimeout_('60')">1 hour</div>
+    </div>
+  </div>
+
+  <div class="settings-hr"></div>
+
+  <!-- Categories -->
+  <div class="settings-section">
+    <div class="settings-section-label">Categories</div>
+    <div id="settingsCatList"></div>
+    <button class="btn-secondary" style="width:100%;margin-top:8px;" onclick="openAddCategory()">+ Add Category</button>
+  </div>
+
+  <div class="settings-hr"></div>
+
+  <!-- Saved credentials -->
+  <div class="settings-section">
+    <div class="settings-section-label">Saved Credentials</div>
+    <div id="settingsCredList"></div>
+  </div>
+
+  <div class="settings-hr"></div>
+
+  <!-- Change PIN -->
+  <div class="settings-section">
+    <div class="settings-section-label">Change PIN</div>
+    <input class="form-input" type="tel" id="changePinInput" maxlength="6" placeholder="New PIN" style="margin-bottom:8px;">
+    <button class="btn-save" style="width:100%;" onclick="changePin()">Update PIN</button>
+  </div>
+
+  <div class="settings-hr"></div>
+
+  <!-- V2: Data -->
+  <div class="settings-section">
+    <div class="settings-section-label">Data &amp; Transfer</div>
+    <div class="data-btn-row">
+      <button class="data-btn accent" onclick="exportConfig()">
+        <span class="data-btn-icon">⬇️</span>
+        <span class="data-btn-label">EXPORT JSON</span>
+      </button>
+      <button class="data-btn" onclick="triggerImport()">
+        <span class="data-btn-icon">⬆️</span>
+        <span class="data-btn-label">IMPORT JSON</span>
+      </button>
+    </div>
+    <input type="file" id="importFileInput" accept=".json,application/json" style="display:none;" onchange="importConfig(this.files[0])">
+  </div>
+
+</div>
+
+<!-- ═══ V2: REORDER BANNER ═══ -->
+<div class="reorder-mode-banner" id="reorderBanner">
+  ✦ REORDER MODE — tap a card, then tap where to swap it
+  <button class="reorder-done-btn" onclick="exitReorderMode()">DONE</button>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+var state = {
+  categories: [],
+  services: [],
+  credentials: {},
+  theme: 'dark',
+  timeout: 10,
+  showLabels: true,
+  iconSize: 'medium',
+  textSize: 'medium',
+};
+
+var session = {
+  unlocked: false,
+  lastActivity: Date.now(),
+};
+
+var pinBuffer = '';
+var editingServiceId = null;
+var selectedLoginType = 'none';
+var timeoutTimer = null;
+var warningTimer = null;
+
+/* ══════════════════════════════════════════
+   ICON LIBRARY
+══════════════════════════════════════════ */
+var ICON_CDN = 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons@main/svg/';
+var ICON_RAW = 'https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/svg/';
+var FAVICON_API = 'https://www.google.com/s2/favicons?sz=64&domain=';
+
+var faviconDomains = {
+  huntarr:'huntarr.io',dashy:'dashy.to',cleanuperr:'github.com',
+  suggestarr:'github.com',tracearr:'github.com',autobrr:'autobrr.com',
+  wizarr:'wizarr.app',flaresolverr:'github.com',librespeed:'librespeed.org',
+  lazylibrarian:'lazylibrarian.gitlab.io',audiobookshelf:'audiobookshelf.org',
+  mealie:'mealie.io',immich:'immich.app',frigate:'frigate.video',
+  paperless:'docs.paperless-ngx.com',
+};
+
+var iconSlugMap = {
+  radarr:'radarr',radarr4k:'radarr',sonarr:'sonarr',lidarr:'lidarr',
+  prowlarr:'prowlarr',bazarr:'bazarr',whisparr:'whisparr',readarr:'readarr',
+  huntarr:'huntarr',cleanuperr:'cleanuperr',tracearr:'tracearr',autobrr:'autobrr',
+  suggestarr:'suggestarr',mylarr:'mylarr',sabnzbd:'sabnzbd',qbittorrent:'qbittorrent',
+  nzbget:'nzbget',transmission:'transmission',deluge:'deluge',rutorrent:'rutorrent',
+  jellyfin:'jellyfin',jellyseerr:'jellyseerr',plex:'plex',emby:'emby',
+  kodi:'kodi',overseerr:'overseerr',ombi:'ombi',tautulli:'tautulli',
+  audiobookshelf:'audiobookshelf',kavita:'kavita',calibre:'calibre',
+  lazylibrarian:'lazylibrarian',portainer:'portainer',traefik:'traefik',
+  nginx:'nginx-proxy-manager',caddy:'caddy',vaultwarden:'vaultwarden',
+  bitwarden:'bitwarden',authelia:'authelia',authentik:'authentik',
+  uptimekuma:'uptime-kuma',uptime:'uptime-kuma',grafana:'grafana',
+  prometheus:'prometheus',netdata:'netdata',glances:'glances',
+  syncthing:'syncthing',nextcloud:'nextcloud',filebrowser:'filebrowser',
+  linkwarden:'linkwarden',dashy:'dashy',homarr:'homarr',homepage:'homepage',
+  homeassistant:'home-assistant',pihole:'pi-hole',adguard:'adguard-home',
+  frigate:'frigate',unifi:'unifi',librespeed:'librespeed',wizarr:'wizarr',
+  flaresolverr:'flaresolverr',immich:'immich',paperless:'paperless-ngx',
+  mealie:'mealie',requestrr:'requestrr',gotify:'gotify',ntfy:'ntfy',
+  maintainerr:'maintainerr',tdarr:'tdarr',
+};
+
+var emojiFallback = {
+  radarr:'🎬',sonarr:'📺',lidarr:'🎵',prowlarr:'🔍',bazarr:'🎙️',
+  sabnzbd:'⚡',qbittorrent:'🌊',jellyfin:'🎞️',plex:'🟡',portainer:'🐳',
+  traefik:'🔀',vaultwarden:'🔑',uptimekuma:'🕐',grafana:'📈',
+  syncthing:'🔄',nextcloud:'☁️',filebrowser:'📁',huntarr:'🎯',
+  dashy:'🏠',cleanuperr:'🧹',autobrr:'🤖',wizarr:'🧙',librespeed:'💨',
+  glances:'👁️',deluge:'🌊',transmission:'⚡',overseerr:'🎬',
+  jellyseerr:'🎬',ombi:'🎬',emby:'🎞️',tautulli:'📊',
+  nginx:'🔀',npm:'🔀',adguard:'🛡️',pihole:'🛡️',maintainerr:'🧹',
+  tdarr:'🎬',
+};
+
+function normaliseKey(name) {
+  return (name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function getIconSlug(name) {
+  if (!name) return null;
+  var key = normaliseKey(name);
+  if (iconSlugMap[key]) return iconSlugMap[key];
+  for (var k in iconSlugMap) {
+    if (key === k || key.startsWith(k) || k.startsWith(key)) return iconSlugMap[k];
+  }
+  return null;
+}
+
+function getFaviconDomain(name) {
+  var key = normaliseKey(name);
+  if (faviconDomains[key]) return faviconDomains[key];
+  for (var k in faviconDomains) {
+    if (key === k || key.startsWith(k)) return faviconDomains[k];
+  }
+  return null;
+}
+
+function getEmoji(name) {
+  if (!name) return '🌐';
+  var key = normaliseKey(name);
+  if (emojiFallback[key]) return emojiFallback[key];
+  for (var k in emojiFallback) {
+    if (key === k || key.startsWith(k)) return emojiFallback[k];
+  }
+  return '🌐';
+}
+
+function makeEmojiSpan(name, size) {
+  var span = document.createElement('span');
+  span.style.cssText = 'font-size:' + size + 'px;line-height:1;display:flex;align-items:center;justify-content:center;';
+  span.textContent = getEmoji(name);
+  return span;
+}
+
+function buildIconEl(name, size) {
+  size = size || 44;
+  var slug = getIconSlug(name);
+  var theme = document.documentElement.getAttribute('data-theme') || 'dark';
+  var variant = (theme === 'light') ? '-dark' : '-light';
+
+  if (!slug) {
+    return buildFaviconOrEmoji(name, size);
+  }
+
+  var img = document.createElement('img');
+  img.width = size; img.height = size;
+  img.style.cssText = 'object-fit:contain;display:block;';
+  img.alt = name || '';
+
+  var tries = [
+    ICON_CDN + slug + variant + '.svg',
+    ICON_CDN + slug + '.svg',
+    ICON_RAW + slug + variant + '.svg',
+    ICON_RAW + slug + '.svg',
+  ];
+
+  var faviconDomain = getFaviconDomain(name);
+  if (faviconDomain) tries.push(FAVICON_API + faviconDomain);
+
+  var attempt = 0;
+  img.src = tries[0];
+
+  img.onerror = function() {
+    attempt++;
+    console.log('Icon load failed for', name, '- attempt', attempt, 'of', tries.length);
+    if (attempt < tries.length) {
+      img.src = tries[attempt];
+    } else {
+      console.log('All icon attempts failed for', name, '- falling back to emoji');
+      var replacement = makeEmojiSpan(name, size * 0.8);
+      if (img.parentNode) img.parentNode.replaceChild(replacement, img);
+    }
+  };
+
+  img.onload = function() {
+    console.log('Icon loaded successfully for', name, 'from:', img.src);
+  };
+
+  return img;
+}
+
+function buildFaviconOrEmoji(name, size) {
+  var domain = getFaviconDomain(name);
+  if (!domain) return makeEmojiSpan(name, size * 0.8);
+
+  var img = document.createElement('img');
+  img.width = size; img.height = size;
+  img.style.cssText = 'object-fit:contain;display:block;';
+  img.src = FAVICON_API + domain;
+  img.onerror = function() {
+    var span = makeEmojiSpan(name, size * 0.8);
+    if (img.parentNode) img.parentNode.replaceChild(span, img);
+  };
+  return img;
+}
+
+function refreshIcons() {
+  document.querySelectorAll('[data-icon-name]').forEach(function(wrap) {
+    var name = wrap.getAttribute('data-icon-name');
+    wrap.innerHTML = '';
+    wrap.appendChild(buildIconEl(name, 44));
+  });
+}
+
+function getIcon(name) { return getEmoji(name); }
+
+/* ══════════════════════════════════════════
+   SERVER IDENTITY
+══════════════════════════════════════════ */
+function loadServerIdentity() {
+  var name = localStorage.getItem('pagerr_server_name') || 'My Server';
+  var logo = localStorage.getItem('pagerr_server_logo') || '';
+  document.getElementById('serverNameInput').value = name;
+  if (logo) {
+    document.getElementById('serverLogoImg').src = logo;
+    document.getElementById('serverLogoImg').style.display = 'block';
+    document.getElementById('serverLogoEmoji').style.display = 'none';
+  } else {
+    document.getElementById('serverLogoImg').style.display = 'none';
+    document.getElementById('serverLogoEmoji').style.display = 'block';
+  }
+  document.getElementById('lockServerName').value = name;
+  if (logo) {
+    document.getElementById('lockLogoImg').src = logo;
+    document.getElementById('lockLogoImg').style.display = 'block';
+    document.getElementById('lockLogoEmoji').style.display = 'none';
+  } else {
+    document.getElementById('lockLogoImg').style.display = 'none';
+    document.getElementById('lockLogoEmoji').style.display = 'block';
+  }
+}
+
+function applyIdentity(name, logo) {
+  localStorage.setItem('pagerr_server_name', name || 'My Server');
+  if (logo) localStorage.setItem('pagerr_server_logo', logo);
+  loadServerIdentity();
+}
+
+function loadLockScreenIdentity() {
+  var name = localStorage.getItem('pagerr_server_name') || 'My Server';
+  var logo = localStorage.getItem('pagerr_server_logo') || '';
+
+  var nameEl = document.getElementById('lockServerName');
+  if (nameEl) nameEl.value = name;
+
+  var lockImg  = document.getElementById('lockLogoImg');
+  var lockEmoji = document.getElementById('lockLogoEmoji');
+
+  if (lockImg && lockEmoji) {
+    if (logo) {
+      lockImg.src = logo;
+      lockImg.style.display = 'block';
+      lockEmoji.style.display = 'none';
+    } else {
+      lockImg.style.display = 'none';
+      lockEmoji.style.display = 'block';
+    }
+  }
+}
+
+function onSetupLogoUpload(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var data = ev.target.result;
+    document.getElementById('setupLogoImg').src = data;
+    document.getElementById('setupLogoImg').style.display = 'block';
+    document.getElementById('setupLogoEmoji').style.display = 'none';
+    document.getElementById('setupLogoHint').style.display = 'none';
+    localStorage.setItem('pagerr_server_logo', data);
+  };
+  reader.readAsDataURL(file);
+}
+
+function onLockLogoUpload(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var data = ev.target.result;
+    localStorage.setItem('pagerr_server_logo', data);
+    loadLockScreenIdentity();
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveLockServerName(val) {
+  val = val.trim() || 'My Server';
+  localStorage.setItem('pagerr_server_name', val);
+  loadServerIdentity();
+}
+
+function saveServerName() {
+  var val = document.getElementById('serverNameInput').value.trim() || 'My Server';
+  document.getElementById('serverNameInput').value = val;
+  localStorage.setItem('pagerr_server_name', val);
+}
+
+function onLogoUpload(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var data = ev.target.result;
+    localStorage.setItem('pagerr_server_logo', data);
+    document.getElementById('serverLogoImg').src = data;
+    document.getElementById('serverLogoImg').style.display = 'block';
+    document.getElementById('serverLogoEmoji').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ══════════════════════════════════════════
+   STORAGE
+══════════════════════════════════════════ */
+function save() {
+  localStorage.setItem('pagerr_state', JSON.stringify({
+    categories: state.categories,
+    services: state.services,
+    credentials: state.credentials,
+    theme: state.theme,
+    timeout: state.timeout,
+    showLabels: state.showLabels,
+    iconSize: state.iconSize,
+    textSize: state.textSize,
+  }));
+}
+
+function load() {
+  var raw = localStorage.getItem('pagerr_state');
+  if (raw) {
+    try {
+      var s = JSON.parse(raw);
+      state.categories = s.categories || [];
+      state.services   = s.services || [];
+      state.credentials = s.credentials || {};
+      state.theme      = s.theme || 'dark';
+      state.timeout    = s.timeout !== undefined ? s.timeout : 10;
+      state.showLabels = s.showLabels !== undefined ? s.showLabels : true;
+      state.iconSize   = s.iconSize || 'medium';
+      state.textSize   = s.textSize || 'medium';
+    } catch(e) {}
+  }
+}
+
+/* ══════════════════════════════════════════
+   THEME
+══════════════════════════════════════════ */
+function setTheme(t) {
+  state.theme = t;
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('themeLight').classList.toggle('active', t === 'light');
+  document.getElementById('themeDark').classList.toggle('active', t === 'dark');
+  save();
+  if (session.unlocked) refreshIcons();
+}
+
+/* ══════════════════════════════════════════
+   LOCK / UNLOCK
+══════════════════════════════════════════ */
+function initLockScreen() {
+  var hasPin = localStorage.getItem('pagerr_pin');
+
+  if (hasPin && checkTrustedDevice()) {
+    doUnlock();
+    return;
+  }
+
+  var sessionUnlocked = sessionStorage.getItem('pagerr_unlocked');
+  if (sessionUnlocked === '1' && hasPin) {
+    doUnlock();
+    return;
+  }
+
+  if (!hasPin) {
+    document.getElementById('setupScreen').classList.add('active');
+  } else {
+    document.getElementById('unlockScreen').classList.add('active');
+    setTimeout(initBiometric, 200);
+  }
+}
+
+/* ══════════════════════════════════════════
+   BIOMETRIC + PIN FLOW
+══════════════════════════════════════════ */
+
+var bioAttempts = 0;
+var bioAvailable = false;
+
+function buf2b64(buf) {
+  return btoa(String.fromCharCode.apply(null, new Uint8Array(buf)));
+}
+
+function b642buf(b64) {
+  var bin = atob(b64);
+  var buf = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  return buf.buffer;
+}
+
+function randomBytes(n) {
+  var b = new Uint8Array(n);
+  window.crypto.getRandomValues(b);
+  return b;
+}
+
+function showBioView() {
+  document.getElementById('bioView').style.display = 'flex';
+  document.getElementById('pinView').style.display = 'none';
+}
+
+function showPinFallback() {
+  if (bioAbortController) {
+    bioAbortController.abort();
+    bioAbortController = null;
+  }
+  document.getElementById('pinView').style.display = 'flex';
+  document.getElementById('bioView').style.display = 'none';
+  if (bioAvailable) {
+    document.getElementById('bioFallbackBtn').style.display = 'block';
+  }
+}
+
+function initBiometric() {
+  if (!window.PublicKeyCredential) {
+    showPinOnly();
+    return;
+  }
+
+  window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+    .then(function(available) {
+      if (!available) {
+        showPinOnly();
+        return;
+      }
+      bioAvailable = true;
+      var stored = localStorage.getItem('pagerr_bio_id');
+      if (!stored) {
+        registerBiometric();
+      } else {
+        showBioView();
+      }
+    }).catch(function() {
+      showPinOnly();
+    });
+}
+
+function showPinOnly() {
+  bioAvailable = false;
+  document.getElementById('pinView').style.display = 'flex';
+  document.getElementById('bioView').style.display = 'none';
+  document.getElementById('bioFallbackBtn').style.display = 'none';
+}
+
+function registerBiometric() {
+  var rpId = window.location.hostname;
+  document.getElementById('bioView').style.display = 'flex';
+  document.getElementById('pinView').style.display = 'none';
+  setBioLabel('TAP TO REGISTER FINGERPRINT');
+
+  navigator.credentials.create({
+    publicKey: {
+      challenge: randomBytes(32),
+      rp: { name: 'Pagerr', id: rpId },
+      user: {
+        id: randomBytes(16),
+        name: 'pagerr-user',
+        displayName: 'Pagerr User',
+      },
+      pubKeyCredParams: [
+        { type: 'public-key', alg: -7   },
+        { type: 'public-key', alg: -257 },
+      ],
+      authenticatorSelection: {
+        authenticatorAttachment: 'platform',
+        userVerification: 'required',
+        residentKey: 'preferred',
+      },
+      timeout: 60000,
+    }
+  }).then(function(cred) {
+    localStorage.setItem('pagerr_bio_id', buf2b64(cred.rawId));
+    setBioLabel('TOUCH TO UNLOCK');
+    bioAttempts = 0;
+    showBioView();
+  }).catch(function(err) {
+    showPinOnly();
+  });
+}
+
+function setBioLabel(txt) {
+  var el = document.getElementById('bioLabel');
+  if (el) el.textContent = txt;
+}
+
+function setBioMsg(txt, colour) {
+  var el = document.getElementById('bioMsg');
+  if (!el) return;
+  el.textContent = txt;
+  el.style.color = colour || 'var(--text3)';
+  el.style.marginTop = txt ? '12px' : '0';
+}
+
+var bioAbortController = null;
+
+function doBiometric() {
+  if (!window.PublicKeyCredential) return;
+
+  var storedId = localStorage.getItem('pagerr_bio_id');
+  if (!storedId) { registerBiometric(); return; }
+
+  setBioLabel('TOUCH TO UNLOCK');
+  setBioMsg('');
+
+  bioAbortController = new AbortController();
+
+  navigator.credentials.get({
+    signal: bioAbortController.signal,
+    publicKey: {
+      challenge: randomBytes(32),
+      timeout: 60000,
+      rpId: window.location.hostname,
+      userVerification: 'required',
+      allowCredentials: [{
+        type: 'public-key',
+        id: b642buf(storedId),
+        transports: ['internal'],
+      }],
+    }
+  }).then(function() {
+    bioAbortController = null;
+    bioAttempts = 0;
+    setBioMsg('✓ Verified', '#22c55e');
+    setTimeout(doUnlock, 300);
+  }).catch(function(err) {
+    bioAbortController = null;
+    if (err.name === 'AbortError') return;
+    bioAttempts++;
+    if (bioAttempts >= 3) {
+      bioAttempts = 0;
+      showPinFallback();
+      var msg = document.getElementById('unlockMsg');
+      if (msg) {
+        msg.textContent = 'Fingerprint failed — enter PIN';
+        msg.style.color = 'var(--accent)';
+        setTimeout(function() {
+          msg.textContent = '';
+          msg.style.color = '#e05555';
+        }, 3000);
+      }
+    } else {
+      var remaining = 3 - bioAttempts;
+      setBioMsg('Failed — ' + remaining + ' attempt' + (remaining !== 1 ? 's' : '') + ' remaining', '#e09a00');
+    }
+  });
+}
+
+function resetBiometric() {
+  localStorage.removeItem('pagerr_bio_id');
+  bioAttempts = 0;
+  showToast('Biometric reset ✓');
+  closeSettings();
+}
+
+function getTrustToken() { return localStorage.getItem('pagerr_trust_token'); }
+function generateTrustToken() {
+  var arr = new Uint8Array(32);
+  window.crypto.getRandomValues(arr);
+  var token = Array.from(arr).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+  localStorage.setItem('pagerr_trust_token', token);
+  return token;
+}
+function checkTrustedDevice() { return !!getTrustToken(); }
+function revokeTrust() {
+  localStorage.removeItem('pagerr_trust_token');
+  showToast('Device trust revoked');
+  renderSettingsTrust();
+}
+function renderSettingsTrust() {
+  var el = document.getElementById('trustStatus');
+  if (!el) return;
+  var trusted = !!getTrustToken();
+  el.innerHTML = trusted
+    ? '<div style="font-size:12px;color:#22c55e;margin-bottom:10px;padding:10px 12px;background:rgba(50,200,100,0.1);border-radius:10px;">✓ This device is trusted</div>' +
+      '<button class="btn-danger-sm" style="width:100%;" onclick="revokeTrust()">Revoke Trust</button>'
+    : '<div style="font-size:12px;color:var(--text3);margin-bottom:10px;line-height:1.5;">No trusted devices.</div>';
+}
+function trustFromSettings() { generateTrustToken(); renderSettingsTrust(); showToast('Device trusted ✓'); }
+function showTrustPrompt() {}
+
+var pinEntry = '';
+
+function numPress(key) {
+  if (key === 'del') {
+    pinEntry = pinEntry.slice(0, -1);
+  } else if (key === 'ok') {
+    checkPin();
+    return;
+  } else {
+    if (pinEntry.length >= 6) return;
+    pinEntry += key;
+    if (pinEntry.length === 4) {
+      var stored = localStorage.getItem('pagerr_pin');
+      if (stored && stored.length === 4) { setTimeout(checkPin, 100); }
+    }
+  }
+  updatePinDots();
+}
+
+function updatePinDots() {
+  for (var i = 0; i < 4; i++) {
+    document.getElementById('d' + i).classList.toggle('filled', i < pinEntry.length);
+  }
+}
+
+function checkPin() {
+  var stored = localStorage.getItem('pagerr_pin');
+  if (pinEntry === stored) {
+    doUnlock();
+  } else {
+    document.getElementById('unlockMsg').textContent = 'Incorrect PIN';
+    pinEntry = '';
+    updatePinDots();
+    setTimeout(function() { document.getElementById('unlockMsg').textContent = ''; }, 2000);
+  }
+}
+
+function doUnlock() {
+  session.unlocked = true;
+  session.lastActivity = Date.now();
+  sessionStorage.setItem('pagerr_unlocked', '1');
+
+  var ls = document.getElementById('lockScreen');
+  ls.classList.add('hidden');
+
+  document.getElementById('app').classList.add('visible');
+  document.getElementById('fab').style.display = 'flex';
+
+  pinEntry = '';
+  updatePinDots();
+  loadServerIdentity();
+  renderDash();
+  startActivityTracking();
+}
+
+function showTrustPrompt() {
+  if (pinEntry.length === 0) {
+    var msg = document.getElementById('unlockMsg');
+    msg.style.color = 'var(--accent)';
+    msg.textContent = 'Enter your PIN first, then tap Trust';
+    setTimeout(function() {
+      msg.textContent = '';
+      msg.style.color = '#e05555';
+    }, 3000);
+    return;
+  }
+  var stored = localStorage.getItem('pagerr_pin');
+  if (pinEntry !== stored) {
+    var msg = document.getElementById('unlockMsg');
+    msg.textContent = 'Incorrect PIN';
+    pinEntry = '';
+    updatePinDots();
+    setTimeout(function() { msg.textContent = ''; }, 2000);
+    return;
+  }
+  trustThisDevice();
+}
+
+function lockApp() {
+  session.unlocked = false;
+  sessionStorage.removeItem('pagerr_unlocked');
+  clearTimers();
+  closeAllSheets();
+  document.getElementById('settingsPanel').classList.remove('open');
+  document.getElementById('settingsDim').classList.remove('active');
+  document.getElementById('settingsDim').classList.remove('visible');
+
+  var ls = document.getElementById('lockScreen');
+  ls.style.display = '';
+  ls.classList.remove('hidden');
+
+  document.getElementById('setupScreen').classList.remove('active');
+  document.getElementById('unlockScreen').classList.add('active');
+
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('fab').style.display = 'none';
+
+  pinEntry = '';
+  bioAttempts = 0;
+  updatePinDots();
+  document.getElementById('unlockMsg').textContent = '';
+  document.getElementById('bioView').style.display = 'none';
+  document.getElementById('pinView').style.display = 'none';
+
+  loadLockScreenIdentity();
+  initBiometric();
+}
+
+function doSetupPin() {
+  var p1 = document.getElementById('newPin').value;
+  var p2 = document.getElementById('confirmPin').value;
+  var msg = document.getElementById('setupMsg');
+
+  if (!p1 || p1.length < 4) { msg.textContent = 'PIN must be at least 4 digits'; return; }
+  if (p1 !== p2) { msg.textContent = 'PINs do not match'; return; }
+
+  localStorage.setItem('pagerr_pin', p1);
+  var setupName = (document.getElementById('setupServerName').value || '').trim() || 'My Server';
+  localStorage.setItem('pagerr_server_name', setupName);
+  document.getElementById('setupScreen').classList.remove('active');
+  document.getElementById('unlockScreen').classList.add('active');
+  document.getElementById('lockServerName').value = setupName;
+  var savedLogo = localStorage.getItem('pagerr_server_logo') || '';
+  if (savedLogo) {
+    document.getElementById('lockLogoImg').src = savedLogo;
+    document.getElementById('lockLogoImg').style.display = 'block';
+    document.getElementById('lockLogoEmoji').style.display = 'none';
+  }
+  initBiometric();
+}
+
+function changePin() {
+  var p = document.getElementById('changePinInput').value;
+  if (!p || p.length < 4) { showToast('PIN must be at least 4 digits'); return; }
+  localStorage.setItem('pagerr_pin', p);
+  document.getElementById('changePinInput').value = '';
+  showToast('PIN updated ✓');
+}
+
+/* ══════════════════════════════════════════
+   ACTIVITY TRACKING & TIMEOUT
+══════════════════════════════════════════ */
+function startActivityTracking() {
+  clearTimers();
+  if (state.timeout === 0) return;
+  resetActivity();
+
+  ['touchstart','click','keydown','scroll'].forEach(function(e) {
+    document.addEventListener(e, resetActivity, { passive: true });
+  });
+
+  timeoutTimer = setInterval(checkTimeout, 10000);
+}
+
+function clearTimers() {
+  if (timeoutTimer) clearInterval(timeoutTimer);
+  if (warningTimer) clearTimeout(warningTimer);
+  timeoutTimer = null; warningTimer = null;
+  ['touchstart','click','keydown','scroll'].forEach(function(e) {
+    document.removeEventListener(e, resetActivity);
+  });
+}
+
+function resetActivity() {
+  session.lastActivity = Date.now();
+  document.getElementById('timeoutBanner').classList.remove('show');
+}
+
+function checkTimeout() {
+  if (!session.unlocked || state.timeout === 0) return;
+  var elapsed = (Date.now() - session.lastActivity) / 1000 / 60;
+  var warn = state.timeout - 1;
+
+  if (elapsed >= state.timeout) {
+    document.getElementById('timeoutBanner').classList.remove('show');
+    lockApp();
+  } else if (elapsed >= warn && state.timeout > 1) {
+    document.getElementById('timeoutBanner').classList.add('show');
+  }
+}
+
+/* ══════════════════════════════════════════
+   RENDER DASHBOARD
+══════════════════════════════════════════ */
+function renderDash() {
+  var body = document.getElementById('dashBody');
+
+  if (state.categories.length === 0) {
+    body.innerHTML =
+      '<div class="empty-state">' +
+        '<div class="empty-icon">🗂️</div>' +
+        '<div class="empty-title">No services yet</div>' +
+        '<div class="empty-sub">Tap + to add your first category and service</div>' +
+        '<button class="add-first-btn" onclick="openAddCategory()"><span>＋</span> Create your first category</button>' +
+      '</div>';
+    return;
+  }
+
+  var html = '';
+  var showedReorderBtn = false;
+
+  state.categories.forEach(function(cat) {
+    var catServices = state.services.filter(function(s) { return s.categoryId === cat.id; });
+    html += '<div class="category-section">';
+    html += '<div class="category-header">';
+    html += '<div class="category-label">' + esc(cat.name) + '</div>';
+    html += '<div style="display:flex;gap:6px;align-items:center;">';
+    if (!showedReorderBtn && state.services.length > 1) {
+      html += '<button class="cat-reorder-btn" onclick="toggleReorderMode()" title="Reorder">⇅ reorder</button>';
+      showedReorderBtn = true;
+    }
+    html += '<button class="cat-edit-btn" onclick="openAddServiceInCat(\'' + cat.id + '\')">+ add</button>';
+    html += '</div>';
+    html += '</div>';
+    html += '<div class="service-grid">';
+
+    catServices.forEach(function(svc) {
+      html += '<div class="service-card" data-svc-id="' + esc(svc.id) + '" onclick="handleCardClick(event,\'' + svc.id + '\')" oncontextmenu="handleCardContext(event,\'' + svc.id + '\')">';
+      if (svc.iconUrl) {
+        html += '<div class="card-icon-wrap ' + state.iconSize + ' drag-handle" data-svc-id="' + esc(svc.id) + '"><img src="' + esc(svc.iconUrl) + '" width="44" height="44" style="object-fit:contain;-webkit-user-drag:none;pointer-events:none;" onerror="this.parentNode.innerHTML=\'' + esc(getEmoji(svc.name)) + '\'"></div>';
+      } else {
+        html += '<div class="card-icon-wrap ' + state.iconSize + ' drag-handle" data-svc-id="' + esc(svc.id) + '" data-icon-name="' + esc(svc.name) + '"></div>';
+      }
+      html += '<div class="card-name text-' + state.textSize + (state.showLabels ? '' : ' hidden') + '">' + esc(svc.name) + '</div>';
+      html += '</div>';
+    });
+
+    html += '<div class="add-card" onclick="openAddServiceInCat(\'' + cat.id + '\')">';
+    html += '<div class="add-card-plus">+</div>';
+    html += '<div class="add-card-txt">add</div>';
+    html += '</div>';
+
+    html += '</div></div>';
+  });
+
+  body.innerHTML = html;
+
+  body.querySelectorAll('[data-icon-name]').forEach(function(wrap) {
+    var name = wrap.getAttribute('data-icon-name');
+    wrap.appendChild(buildIconEl(name, 44));
+  });
+}
+
+/* ══════════════════════════════════════════
+   OPEN SERVICE (with auto-login)
+   
+   AUTO-LOGIN SUPPORT:
+   ✅ Arr stack (Radarr, Sonarr, etc.) - Form POST
+   ✅ SABnzbd - Form POST
+   ✅ qBittorrent - Form POST
+   ✅ Deluge - Form POST
+   ✅ Transmission - Basic Auth
+   ✅ ruTorrent - Form POST
+   ✅ NZBGet - Basic Auth (URL-based)
+   ✅ Tautulli - Form POST
+   ✅ Pi-hole - Form POST
+   
+   ⚠️ CORS-LIMITED (requires same-origin or permissive CORS):
+   - Wizarr - JSON API (may be blocked by CORS, falls back to direct open)
+   - Autobrr - JSON API (blocked by CORS)
+   - Overseerr/Jellyseerr - JSON API (may be blocked)
+   - Ombi - JSON API (may be blocked)
+   - Jellyfin/Emby - JSON API (may be blocked)
+   - Portainer - JSON API (may be blocked)
+   - NPM - JSON API (may be blocked)
+   - FileBrowser - JSON API (may be blocked)
+   - AdGuard - JSON API (may be blocked)
+   - Tdarr - JSON API (may be blocked)
+   - Maintainerr - JSON API (may be blocked)
+   
+   For CORS-limited services, the app will open the service
+   directly and the user logs in once. Browser remembers the session.
+══════════════════════════════════════════ */
+function openService(id) {
+  var svc = state.services.find(function(s) { return s.id === id; });
+  if (!svc) return;
+
+  var cred = state.credentials[id];
+
+  if (!cred || svc.loginType === 'none') {
+    window.location.href = svc.url;
+    return;
+  }
+
+  var form = document.createElement('form');
+  form.method = 'POST';
+
+  if (svc.loginType === 'arr') {
+    form.action = svc.url + '/login';
+    postFields(form, { username: cred.username, password: cred.password, returnUrl: '/' });
+
+  } else if (svc.loginType === 'sabnzbd') {
+    form.action = svc.url + '/login/';
+    postFields(form, { username: cred.username, password: cred.password, remember_me: '1' });
+
+  } else if (svc.loginType === 'qbit') {
+    form.action = svc.url + '/api/v2/auth/login';
+    postFields(form, { username: cred.username, password: cred.password });
+
+  } else if (svc.loginType === 'deluge') {
+    form.action = svc.url + '/json';
+    postFields(form, { method: 'auth.login', params: [cred.password], id: 1 });
+
+  } else if (svc.loginType === 'transmission') {
+    form.action = svc.url + '/transmission/rpc';
+    postFields(form, { method: 'session-get' });
+    form.addEventListener('submit', function() {
+      form.headers = { 'Authorization': 'Basic ' + btoa(cred.username + ':' + cred.password) };
+    });
+
+  } else if (svc.loginType === 'nzbget') {
+    form.action = svc.url + '/jsonrpc';
+    var authHeader = btoa(cred.username + ':' + cred.password);
+    window.location.href = svc.url.replace('://', '://' + cred.username + ':' + cred.password + '@');
+    return;
+
+  } else if (svc.loginType === 'tautulli') {
+    form.action = svc.url + '/auth/login';
+    postFields(form, { username: cred.username, password: cred.password });
+
+  } else if (svc.loginType === 'pihole') {
+    form.action = svc.url + '/admin/index.php?login';
+    postFields(form, { pw: cred.password });
+
+  } else if (svc.loginType === 'wizarr') {
+    // Wizarr uses JWT — POST JSON to /api/auth/login, then redirect
+    fetch(svc.url + '/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: cred.username, password: cred.password }),
+      credentials: 'include',
+    })
+    .then(function(r) {
+      // Whether or not CORS allows us, navigate to the service.
+      // The cookie/session will have been set if the request succeeded.
+      window.location.href = svc.url;
+    })
+    .catch(function() {
+      // CORS blocked — just open the service and let the user log in manually.
+      window.location.href = svc.url;
+    });
+    return;
+
+  } else {
+    window.location.href = svc.url;
+    return;
+  }
+
+  document.body.appendChild(form);
+  form.submit();
+}
+
+function postFields(form, fields) {
+  Object.keys(fields).forEach(function(k) {
+    var i = document.createElement('input');
+    i.type = 'hidden'; i.name = k; i.value = fields[k];
+    form.appendChild(i);
+  });
+}
+
+/* ══════════════════════════════════════════
+   ADD / EDIT SERVICE SHEET
+══════════════════════════════════════════ */
+var prefillCategoryId = null;
+
+function openAddService() {
+  if (state.categories.length === 0) {
+    showToast('Create a category first');
+    openAddCategory();
+    return;
+  }
+  editingServiceId = null;
+  prefillCategoryId = null;
+  document.getElementById('serviceSheetTitle').textContent = 'Add Service';
+  document.getElementById('svcName').value = '';
+  document.getElementById('svcUrl').value = '';
+  document.getElementById('svcUser').value = '';
+  document.getElementById('svcPass').value = '';
+  document.getElementById('svcIconUrl').value = '';
+  var prev = document.getElementById('iconPreview'); prev.innerHTML = ''; prev.appendChild(buildIconEl('', 44));
+  document.getElementById('iconPreviewName').textContent = 'Type a service name';
+  document.getElementById('iconPreviewHint').textContent = 'Icon auto-matches as you type';
+  document.getElementById('deleteServiceBtn').style.display = 'none';
+  selectLoginType('none');
+  populateCategorySelect(null);
+  openSheet('serviceSheet');
+}
+
+function openAddServiceInCat(catId) {
+  openAddService();
+  prefillCategoryId = catId;
+  populateCategorySelect(catId);
+}
+
+function editService(id) {
+  var svc = state.services.find(function(s) { return s.id === id; });
+  if (!svc) return;
+  editingServiceId = id;
+  document.getElementById('serviceSheetTitle').textContent = 'Edit Service';
+  document.getElementById('svcName').value = svc.name;
+  document.getElementById('svcUrl').value = svc.url;
+  document.getElementById('svcIconUrl').value = svc.iconUrl || '';
+  var editPrev = document.getElementById('iconPreview'); editPrev.innerHTML = '';
+  editPrev.appendChild(svc.iconUrl ? (function(){ var i=document.createElement('img'); i.width=44; i.height=44; i.style='object-fit:contain;'; i.src=svc.iconUrl; return i; })() : buildIconEl(svc.name, 44));
+  document.getElementById('iconPreviewName').textContent = svc.name;
+  document.getElementById('iconPreviewHint').textContent = 'Icon matched';
+  var cred = state.credentials[id];
+  document.getElementById('svcUser').value = cred ? cred.username : '';
+  document.getElementById('svcPass').value = cred ? cred.password : '';
+  selectLoginType(svc.loginType || 'none');
+  populateCategorySelect(svc.categoryId);
+  document.getElementById('deleteServiceBtn').style.display = 'block';
+  openSheet('serviceSheet');
+}
+
+function onNameInput(val) {
+  var customUrl = document.getElementById('svcIconUrl').value.trim();
+  if (!customUrl) updateIconPreview(val, null);
+  document.getElementById('iconPreviewName').textContent = val || 'Type a service name';
+  var slug = getIconSlug(val);
+  if (!customUrl) {
+    document.getElementById('iconPreviewHint').textContent = val
+      ? (slug ? '✓ Auto-matched from library' : 'No match — add a custom URL below')
+      : 'Icon auto-matches as you type';
+  }
+}
+
+function onIconUrlInput(url) {
+  var name = document.getElementById('svcName').value.trim();
+  if (url.trim()) {
+    updateIconPreview(null, url.trim());
+    document.getElementById('iconPreviewHint').textContent = '✓ Using custom icon URL';
+  } else {
+    updateIconPreview(name, null);
+    var slug = getIconSlug(name);
+    document.getElementById('iconPreviewHint').textContent = name
+      ? (slug ? '✓ Auto-matched from library' : 'No match — add a custom URL above')
+      : 'Icon auto-matches as you type';
+  }
+}
+
+function updateIconPreview(name, customUrl) {
+  var preview = document.getElementById('iconPreview');
+  preview.innerHTML = '';
+  if (customUrl) {
+    var img = document.createElement('img');
+    img.width = 44; img.height = 44;
+    img.style.cssText = 'object-fit:contain;display:block;';
+    img.src = customUrl;
+    img.onerror = function() {
+      preview.innerHTML = '';
+      preview.appendChild(makeEmojiSpan('?', 32));
+      document.getElementById('iconPreviewHint').textContent = '⚠ Could not load that URL';
+    };
+    preview.appendChild(img);
+  } else {
+    preview.appendChild(buildIconEl(name || '', 44));
+  }
+}
+
+function selectLoginType(type) {
+  selectedLoginType = type;
+  document.querySelectorAll('.type-chip').forEach(function(c) {
+    c.classList.toggle('selected', c.getAttribute('data-type') === type);
+  });
+  document.getElementById('credFields').style.display = (type !== 'none') ? 'block' : 'none';
+}
+
+function populateCategorySelect(selectedId) {
+  var sel = document.getElementById('svcCategory');
+  sel.innerHTML = '';
+  state.categories.forEach(function(cat) {
+    var opt = document.createElement('option');
+    opt.value = cat.id;
+    opt.textContent = cat.name;
+    if (cat.id === selectedId || cat.id === prefillCategoryId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function saveService() {
+  var name = document.getElementById('svcName').value.trim();
+  var url  = document.getElementById('svcUrl').value.trim();
+  var catId = document.getElementById('svcCategory').value;
+  var user = document.getElementById('svcUser').value.trim();
+  var pass = document.getElementById('svcPass').value;
+
+  if (!name) { showToast('Please enter a service name'); return; }
+  if (!url)  { showToast('Please enter a URL'); return; }
+  if (catId === '__new') { showToast('Please select or create a category'); return; }
+
+  var iconUrl = document.getElementById('svcIconUrl').value.trim();
+  var icon = getIcon(name);
+
+  if (editingServiceId) {
+    var svc = state.services.find(function(s) { return s.id === editingServiceId; });
+    if (svc) {
+      svc.name = name; svc.url = url; svc.icon = icon;
+      svc.iconUrl = iconUrl; svc.categoryId = catId; svc.loginType = selectedLoginType;
+    }
+  } else {
+    state.services.push({
+      id: uid(), name: name, url: url,
+      icon: icon, iconUrl: iconUrl, categoryId: catId, loginType: selectedLoginType,
+    });
+  }
+
+  if (selectedLoginType !== 'none' && user && pass) {
+    var sid = editingServiceId || state.services[state.services.length - 1].id;
+    state.credentials[sid] = { username: user, password: pass };
+  } else if (selectedLoginType === 'none' && editingServiceId) {
+    delete state.credentials[editingServiceId];
+  }
+
+  save();
+  closeAllSheets();
+  renderDash();
+  renderSettingsLists();
+  showToast(editingServiceId ? 'Service updated ✓' : 'Service added ✓');
+  editingServiceId = null;
+}
+
+function deleteCurrentService() {
+  if (!editingServiceId) return;
+  if (!confirm('Delete this service?')) return;
+  state.services = state.services.filter(function(s) { return s.id !== editingServiceId; });
+  delete state.credentials[editingServiceId];
+  save();
+  closeAllSheets();
+  renderDash();
+  renderSettingsLists();
+  showToast('Service deleted');
+  editingServiceId = null;
+}
+
+/* ══════════════════════════════════════════
+   CATEGORIES
+══════════════════════════════════════════ */
+function openAddCategory() {
+  editingCategoryId = null;
+  document.getElementById('catName').value = '';
+  document.getElementById('categorySheet').querySelector('.sheet-title').textContent = 'Add Category';
+  openSheet('categorySheet');
+}
+
+var returnToServiceSheet = false;
+
+function openAddCategoryFromService() {
+  returnToServiceSheet = true;
+  var name = document.getElementById('svcName').value;
+  var url  = document.getElementById('svcUrl').value;
+  var user = document.getElementById('svcUser').value;
+  var pass = document.getElementById('svcPass').value;
+  var lt   = selectedLoginType;
+
+  document.getElementById('catName').value = '';
+  document.querySelectorAll('.bottom-sheet').forEach(function(s) { s.classList.remove('open'); });
+  setTimeout(function() {
+    document.getElementById('categorySheet').classList.add('open');
+    window._svcDraft = { name: name, url: url, user: user, pass: pass, lt: lt };
+  }, 50);
+}
+
+function saveCategory() {
+  var name = document.getElementById('catName').value.trim();
+  if (!name) { showToast('Enter a category name'); return; }
+  
+  if (editingCategoryId) {
+    // Edit existing category
+    var cat = state.categories.find(function(c) { return c.id === editingCategoryId; });
+    if (cat) cat.name = name;
+    save();
+    renderDash();
+    renderSettingsLists();
+    showToast('Category updated ✓');
+    editingCategoryId = null;
+    document.getElementById('categorySheet').querySelector('.sheet-title').textContent = 'Add Category';
+    closeAllSheets();
+    openSettings();
+    return;
+  }
+  
+  // Add new category
+  var newCat = { id: uid(), name: name };
+  state.categories.push(newCat);
+  save();
+  renderDash();
+  renderSettingsLists();
+  showToast('Category added ✓');
+
+  if (!returnToServiceSheet && state.services.length === 0) {
+    setTimeout(function() { openAddService(); }, 400);
+    return;
+  }
+
+  if (returnToServiceSheet) {
+    returnToServiceSheet = false;
+    document.getElementById('categorySheet').classList.remove('open');
+    setTimeout(function() {
+      populateCategorySelect(newCat.id);
+      var draft = window._svcDraft || {};
+      if (draft.name) document.getElementById('svcName').value = draft.name;
+      if (draft.url)  document.getElementById('svcUrl').value  = draft.url;
+      if (draft.user) document.getElementById('svcUser').value = draft.user;
+      if (draft.pass) document.getElementById('svcPass').value = draft.pass;
+      if (draft.lt)   selectLoginType(draft.lt);
+      if (draft.name) onNameInput(draft.name);
+      document.getElementById('serviceSheet').classList.add('open');
+      window._svcDraft = null;
+    }, 300);
+  } else {
+    closeAllSheets();
+  }
+}
+
+/* ══════════════════════════════════════════
+   SETTINGS
+══════════════════════════════════════════ */
+function openSettings() {
+  renderSettingsLists();
+  document.getElementById('settingsPanel').classList.add('open');
+  document.getElementById('settingsDim').classList.add('active');
+  setTimeout(function() { document.getElementById('settingsDim').classList.add('visible'); }, 10);
+}
+
+function closeSettings() {
+  document.getElementById('settingsPanel').classList.remove('open');
+  var dim = document.getElementById('settingsDim');
+  dim.classList.remove('visible');
+  setTimeout(function() { dim.classList.remove('active'); }, 250);
+}
+
+function renderSettingsLists() {
+  // Categories
+  var catList = document.getElementById('settingsCatList');
+  if (state.categories.length === 0) {
+    catList.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0;">No categories yet</div>';
+  } else {
+    catList.innerHTML = state.categories.map(function(cat) {
+      return '<div class="cat-item" style="margin-bottom:8px;">' +
+        '<div class="cat-item-name">' + esc(cat.name) + '</div>' +
+        '<div style="display:flex;gap:8px;">' +
+          '<button class="btn-secondary" style="padding:6px 12px;font-size:11px;" onclick="editCategory(\'' + cat.id + '\')">Edit</button>' +
+          '<button class="btn-danger-sm" onclick="deleteCategory(\'' + cat.id + '\')">Delete</button>' +
+        '</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  // Credentials
+  var credList = document.getElementById('settingsCredList');
+  var credKeys = Object.keys(state.credentials);
+  if (credKeys.length === 0) {
+    credList.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0;">No credentials saved</div>';
+  } else {
+    credList.innerHTML = credKeys.map(function(sid) {
+      var svc = state.services.find(function(s) { return s.id === sid; });
+      var name = svc ? svc.name : sid;
+      var type = svc ? (svc.loginType || 'none') : '';
+      return '<div class="cred-item" style="margin-bottom:8px;">' +
+        '<div class="cred-item-info">' +
+          '<div class="cred-item-name">' + esc(name) + '<span class="cred-type-badge">' + type.toUpperCase() + '</span></div>' +
+          '<div class="cred-item-user">' + esc(state.credentials[sid].username) + '</div>' +
+        '</div>' +
+        '<button class="btn-danger-sm" onclick="deleteCred(\'' + sid + '\')">Delete</button>' +
+        '</div>';
+    }).join('');
+  }
+
+  // Timeout
+  document.querySelectorAll('.timeout-opt').forEach(function(opt) {
+    opt.classList.toggle('active', parseInt(opt.getAttribute('data-val')) === state.timeout);
+  });
+
+  // Icon size
+  document.querySelectorAll('#iconSizeOpts .timeout-opt').forEach(function(opt) {
+    opt.classList.toggle('active', opt.getAttribute('data-size') === state.iconSize);
+  });
+
+  // Text size
+  document.querySelectorAll('#textSizeOpts .timeout-opt').forEach(function(opt) {
+    opt.classList.toggle('active', opt.getAttribute('data-size') === state.textSize);
+  });
+
+  // Labels toggle
+  var labelsToggle = document.getElementById('labelsToggle');
+  if (labelsToggle) labelsToggle.checked = state.showLabels;
+}
+
+function deleteCategory(id) {
+  if (!confirm('Delete category? Services in it will be uncategorised.')) return;
+  state.categories = state.categories.filter(function(c) { return c.id !== id; });
+  save(); renderDash(); renderSettingsLists();
+  showToast('Category deleted');
+}
+
+var editingCategoryId = null;
+
+function editCategory(id) {
+  var cat = state.categories.find(function(c) { return c.id === id; });
+  if (!cat) return;
+  editingCategoryId = id;
+  document.getElementById('catName').value = cat.name;
+  document.getElementById('categorySheet').querySelector('.sheet-title').textContent = 'Edit Category';
+  closeSettings();
+  openSheet('categorySheet');
+}
+
+function deleteCred(sid) {
+  delete state.credentials[sid];
+  var svc = state.services.find(function(s) { return s.id === sid; });
+  if (svc) svc.loginType = 'none';
+  save(); renderDash(); renderSettingsLists();
+  showToast('Credentials deleted');
+}
+
+function setTimeout_(val) {
+  state.timeout = parseInt(val);
+  save();
+  renderSettingsLists();
+  clearTimers();
+  if (session.unlocked) startActivityTracking();
+  showToast(state.timeout === 0 ? 'Auto-lock disabled' : 'Auto-lock: ' + state.timeout + ' min');
+}
+
+function toggleLabels() {
+  state.showLabels = !state.showLabels;
+  save();
+  renderDash();
+  renderSettingsLists();
+}
+
+function setIconSize(size) {
+  state.iconSize = size;
+  save();
+  renderDash();
+  renderSettingsLists();
+  var sizeNames = { small: 'Small', medium: 'Medium', large: 'Large' };
+  showToast('Icon size: ' + sizeNames[size]);
+}
+
+function setTextSize(size) {
+  state.textSize = size;
+  save();
+  renderDash();
+  renderSettingsLists();
+  var sizeNames = { small: 'Small', medium: 'Medium', large: 'Large' };
+  showToast('Text size: ' + sizeNames[size]);
+}
+
+/* ══════════════════════════════════════════
+   SHEET HELPERS
+══════════════════════════════════════════ */
+function openSheet(id) {
+  closeAllSheets(true);
+  document.getElementById(id).classList.add('open');
+  document.getElementById('sheetOverlay').classList.add('active');
+  setTimeout(function() { document.getElementById('sheetOverlay').classList.add('visible'); }, 10);
+}
+
+function closeAllSheets(keepOverlay) {
+  document.querySelectorAll('.bottom-sheet').forEach(function(s) { s.classList.remove('open'); });
+  if (!keepOverlay) closeOverlay();
+}
+
+function closeOverlay() {
+  var o = document.getElementById('sheetOverlay');
+  o.classList.remove('visible');
+  setTimeout(function() {
+    o.classList.remove('active');
+    document.getElementById('settingsPanel').classList.remove('open');
+  }, 250);
+}
+
+/* ══════════════════════════════════════════
+   UTILS
+══════════════════════════════════════════ */
+function uid() {
+  return Math.random().toString(36).slice(2, 10);
+}
+
+function esc(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+
+/* ══════════════════════════════════════════
+   FAB MENU
+══════════════════════════════════════════ */
+var fabMenuOpen = false;
+
+function toggleFabMenu() {
+  fabMenuOpen = !fabMenuOpen;
+  var menu = document.getElementById('fabMenu');
+  var fab = document.getElementById('fab');
+  menu.style.display = fabMenuOpen ? 'flex' : 'none';
+  fab.textContent = fabMenuOpen ? '✕' : '＋';
+  fab.style.background = fabMenuOpen ? 'var(--surface)' : 'var(--accent)';
+  fab.style.color = fabMenuOpen ? 'var(--accent)' : '#fff';
+  fab.style.border = fabMenuOpen ? '1px solid var(--border)' : 'none';
+}
+
+function fabAction(type) {
+  toggleFabMenu();
+  if (type === 'service') openAddService();
+  else openAddCategory();
+}
+
+function closeFabMenu() {
+  if (fabMenuOpen) toggleFabMenu();
+}
+
+/* ══════════════════════════════════════════
+   V2 ① — TAP-TO-SWAP REORDER
+══════════════════════════════════════════ */
+var reorderMode = false;
+var reorderSelected = null; // id of first selected card
+
+// Card click/context handlers
+function handleCardClick(e, id) {
+  if (reorderMode) {
+    handleReorderTap(id);
+    return;
+  }
+  openService(id);
+}
+
+function handleCardContext(e, id) {
+  e.preventDefault();
+  if (reorderMode) return;
+  editService(id);
+}
+
+function handleReorderTap(id) {
+  if (!reorderSelected) {
+    // First tap — select this card
+    reorderSelected = id;
+    document.querySelectorAll('.service-card[data-svc-id]').forEach(function(card) {
+      card.classList.toggle('reorder-selected', card.getAttribute('data-svc-id') === id);
+    });
+    showToast('Now tap the card to swap with');
+  } else if (reorderSelected === id) {
+    // Tapped same card — deselect
+    reorderSelected = null;
+    document.querySelectorAll('.service-card[data-svc-id]').forEach(function(card) {
+      card.classList.remove('reorder-selected');
+    });
+  } else {
+    // Second tap — swap positions AND categories
+    swapServices(reorderSelected, id);
+    reorderSelected = null;
+    showToast('Swapped ✓');
+  }
+}
+
+function toggleReorderMode() {
+  if (reorderMode) {
+    exitReorderMode();
+  } else {
+    enterReorderMode();
+  }
+}
+
+function enterReorderMode() {
+  reorderMode = true;
+  reorderSelected = null;
+  document.getElementById('reorderBanner').classList.add('active');
+  document.querySelectorAll('.service-card[data-svc-id]').forEach(function(card) {
+    card.classList.add('reorder-active');
+  });
+  var btn = document.querySelector('.cat-reorder-btn');
+  if (btn) { btn.classList.add('active'); btn.textContent = '✓ done'; }
+}
+
+function exitReorderMode() {
+  reorderMode = false;
+  reorderSelected = null;
+  document.getElementById('reorderBanner').classList.remove('active');
+  document.querySelectorAll('.service-card[data-svc-id]').forEach(function(card) {
+    card.classList.remove('reorder-active', 'reorder-selected');
+  });
+  var btn = document.querySelector('.cat-reorder-btn');
+  if (btn) { btn.classList.remove('active'); btn.textContent = '⇅ reorder'; }
+}
+
+function swapServices(aId, bId) {
+  var ai = state.services.findIndex(function(s) { return s.id === aId; });
+  var bi = state.services.findIndex(function(s) { return s.id === bId; });
+  if (ai === -1 || bi === -1) return;
+  // Swap both position in array AND categoryId so cross-category moves work
+  var aCat = state.services[ai].categoryId;
+  var bCat = state.services[bi].categoryId;
+  var tmp = state.services[ai];
+  state.services[ai] = state.services[bi];
+  state.services[bi] = tmp;
+  state.services[ai].categoryId = aCat;
+  state.services[bi].categoryId = bCat;
+  save();
+  renderDash();
+}
+
+/* ══════════════════════════════════════════
+   V2 ② — JSON EXPORT / IMPORT
+══════════════════════════════════════════ */
+function exportConfig() {
+  var payload = {
+    version: 2,
+    exportedAt: Date.now(),
+    state: state
+  };
+  var json = JSON.stringify(payload, null, 2);
+  var blob = new Blob([json], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'pagerr-config.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Config exported ✓');
+  closeSettings();
+}
+
+function triggerImport() {
+  document.getElementById('importFileInput').value = '';
+  document.getElementById('importFileInput').click();
+}
+
+function importConfig(file) {
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var parsed = JSON.parse(e.target.result);
+      if (!parsed.version || !parsed.state) {
+        showToast('Invalid Pagerr config');
+        return;
+      }
+      if (!confirm('Replace current config with imported data? This cannot be undone.')) return;
+      state = parsed.state;
+      save();
+      showToast('Imported ✓ — reloading…');
+      setTimeout(function() { location.reload(); }, 800);
+    } catch (err) {
+      showToast('Import failed — invalid JSON');
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ══════════════════════════════════════════
+   V2 PATCH: re-apply reorder visuals after renderDash
+══════════════════════════════════════════ */
+var _origRenderDash = renderDash;
+renderDash = function() {
+  _origRenderDash();
+  if (reorderMode) {
+    document.querySelectorAll('.service-card[data-svc-id]').forEach(function(card) {
+      card.classList.add('reorder-active');
+    });
+  }
+};
+window.addEventListener('load', function() {
+  load();
+  setTheme(state.theme);
+  loadLockScreenIdentity();
+  initLockScreen();
+
+  document.getElementById('timeoutBanner').addEventListener('click', function() {
+    this.classList.remove('show');
+    resetActivity();
+  });
+});
+</script>
+</body>
+</html>
