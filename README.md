@@ -1,5 +1,7 @@
 # Pagerr
 
+![Pagerr](docs/logo.png)
+
 **A PIN-protected, single-file homelab dashboard.**
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
