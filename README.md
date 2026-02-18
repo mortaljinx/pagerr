@@ -19,6 +19,14 @@ Built for Tailscale. Works behind any reverse proxy.
 
 ---
 
+## Screenshots
+
+| Lock Screen | Dashboard (Dark) | Dashboard (Light) | Settings |
+|:-----------:|:----------------:|:-----------------:|:--------:|
+| <img src="docs/screenshot-lock.png" width="180"> | <img src="docs/screenshot-dark.png" width="180"> | <img src="docs/screenshot-light.png" width="180"> | <img src="docs/screenshot-settings.png" width="180"> |
+
+---
+
 ## Features
 
 - **Single file** — the entire app is one `.html` file. Serve it anywhere
