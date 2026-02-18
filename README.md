@@ -1,5 +1,6 @@
-::: {align="center"}
-`<img src="docs/logo.png" width="200" alt="Pagerr">`{=html}
+<div align="center">
+
+<img src="docs/logo.png" width="200" alt="Pagerr">
 
 # Pagerr
 
@@ -10,116 +11,58 @@
 ![Self-hosted](https://img.shields.io/badge/Self--hosted-yes-22c55e)
 ![Tailscale](https://img.shields.io/badge/Tailscale-friendly-4d8eff)
 
-Pagerr is a single HTML file that provides fast, mobile-first access to
-your self-hosted services.
-
-No backend.\
-No database.\
-No accounts.
-
-Everything runs locally in your browser.
+Pagerr is a single HTML file that gives you a clean, mobile-first dashboard for all your self-hosted services. No database. No backend. No accounts. Everything lives in your browser's `localStorage`.
 
 Built for Tailscale. Works behind any reverse proxy.
-:::
 
-------------------------------------------------------------------------
+</div>
+
+---
 
 ## Screenshots
 
-  ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-                          Lock Screen                                              Dashboard (Dark)                                            Dashboard (Light)                                                  Settings
-  ----------------------------------------------------------- ----------------------------------------------------------- ------------------------------------------------------------ ---------------------------------------------------------------
-   `<img src="docs/screenshot-lock.png" width="180">`{=html}   `<img src="docs/screenshot-dark.png" width="180">`{=html}   `<img src="docs/screenshot-light.png" width="180">`{=html}   `<img src="docs/screenshot-settings.png" width="180">`{=html}
+| Lock Screen | Dashboard (Dark) | Dashboard (Light) | Settings |
+|:-----------:|:----------------:|:-----------------:|:--------:|
+| <img src="docs/screenshot-lock.png" width="180"> | <img src="docs/screenshot-dark.png" width="180"> | <img src="docs/screenshot-light.png" width="180"> | <img src="docs/screenshot-settings.png" width="180"> |
 
-  ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-------------------------------------------------------------------------
-
-## What Is Pagerr?
-
-Pagerr is designed for **speed and simplicity**.
-
-It is not a homepage replacement.\
-It is not a monitoring dashboard.
-
-It is your **remote control** for your server.
-
-Open. Tap. Done.
-
-------------------------------------------------------------------------
-
-## Core Principles
-
--   Single static file\
--   Mobile-first design\
--   Zero external dependencies\
--   No telemetry or tracking\
--   Works offline once loaded\
--   Fully self-contained
-
-------------------------------------------------------------------------
+---
 
 ## Features
 
--   **Single-file app** --- everything lives in `index.html`
--   **PIN lock (4--6 digits)** with optional biometric unlock
--   **Auto icon matching** from dashboard-icons
--   **Category organisation**
--   **Tap-to-swap reorder mode**
--   **Auto-login support for common homelab apps**
--   **JSON export & import**
--   **Dark / Light theme**
--   **Adjustable icon and text sizing**
--   **Custom server name and logo**
--   **Add to home screen (PWA-style)**
+- **Single file** — the entire app is one `.html` file. Serve it anywhere
+- **PIN lock** — 4–6 digit PIN set on first launch, with optional biometric unlock
+- **Auto icon matching** — fetches service icons automatically from [dashboard-icons](https://github.com/homarr-labs/dashboard-icons)
+- **Categories** — organise services into labelled groups
+- **Reorder** — tap ⇅ reorder to rearrange services, swap across categories
+- **Auto-login** — stores credentials and auto-submits login forms for supported services
+- **JSON export / import** — back up your config or transfer it to another device
+- **Dark & light theme** — smooth, switchable
+- **Customisable display** — icon size, text size, toggleable service labels
+- **Custom branding** — upload your own server logo and name
+- **Add to home screen** — installs as a PWA on mobile for a full-screen app experience
+- **Zero tracking** — nothing leaves your device
 
-------------------------------------------------------------------------
+---
 
-## Quickstart (Docker -- 30 seconds)
+## Quickstart
 
-``` bash
+```bash
 git clone https://github.com/mortaljinx/pagerr.git
 cd pagerr
 docker compose up -d
 ```
 
-Open:
+Open `http://your-server-ip:10000` — or your Tailscale IP if accessing remotely.
 
-http://your-server-ip:10000
+On first launch you'll set a PIN and optionally a server name and logo.
 
-Set your PIN on first launch and start adding services.
-
-------------------------------------------------------------------------
-
-## Docker Compose
-
-``` yaml
-version: "3.8"
-
-services:
-  pagerr:
-    image: nginx:alpine
-    container_name: pagerr
-    ports:
-      - "10000:80"
-    volumes:
-      - ./:/usr/share/nginx/html:ro
-    restart: unless-stopped
-```
-
-Repository structure:
-
-    pagerr/
-     ├── index.html
-     └── docker-compose.yml
-
-------------------------------------------------------------------------
+---
 
 ## Serve Without Docker
 
-Pagerr is just a static file.
+Because Pagerr is a single HTML file you can serve it with anything:
 
-``` bash
+```bash
 # Python
 python3 -m http.server 10000
 
@@ -127,108 +70,129 @@ python3 -m http.server 10000
 npx serve . -p 10000
 ```
 
-Or simply open `index.html` directly in a browser.
+Or just open `pagerr.html` directly in a browser.
 
-------------------------------------------------------------------------
+---
+
+## Docker Compose
+
+```yaml
+services:
+  pagerr:
+    image: nginx:alpine
+    container_name: pagerr
+    ports:
+      - "10000:80"
+    volumes:
+      - ./pagerr.html:/usr/share/nginx/html/index.html:ro
+    restart: unless-stopped
+```
+
+---
 
 ## Updating
 
-``` bash
+```bash
 git pull
-docker compose up -d
+docker restart pagerr
 ```
 
-Your configuration lives in browser `localStorage`.\
-Updating Pagerr never touches your services.
+Your data lives in `localStorage` in your browser — updating never touches your services or settings.
 
-------------------------------------------------------------------------
+---
 
 ## Backup & Restore
 
-Settings → **Export JSON** to save your configuration.
+Settings → **Export JSON** saves a `pagerr-config.json` file with all your services, categories, and settings.
 
-To restore:
+To restore or move to another device: Settings → **Import JSON** → pick the file.
 
-Settings → **Import JSON**
+Keep a copy of your export somewhere safe. If you clear your browser storage, this is your only recovery option.
 
-If you clear browser storage, your export file is the only recovery
-method.
-
-------------------------------------------------------------------------
+---
 
 ## Auto-Login Support
 
-Supported services include:
+Pagerr can auto-submit credentials for the following services:
 
--   Arr stack (Radarr, Sonarr, Lidarr, etc.)
--   SABnzbd
--   qBittorrent
--   Deluge
--   Transmission
--   NZBGet
--   Tautulli
--   Pi-hole
--   Wizarr
+| Service | Method |
+|---|---|
+| Radarr / Sonarr / Lidarr / Prowlarr / Readarr | Form POST |
+| SABnzbd | Form POST |
+| qBittorrent | Form POST |
+| Deluge | Form POST |
+| Transmission | Basic Auth |
+| NZBGet | Basic Auth |
+| Tautulli | Form POST |
+| Pi-hole | Form POST |
+| Wizarr | Form POST |
 
-Unsupported services simply open normally.
+Services not listed will open normally. Your browser remembers the session after the first manual login.
 
-Auto-login works best when Pagerr and your services share the same
-domain or Tailscale network.
+> Auto-login works best when Pagerr and your services share the same domain or are on the same Tailscale network. Some services block cross-origin requests regardless of configuration.
 
-------------------------------------------------------------------------
+---
 
 ## Access Methods
 
-### Tailscale (Recommended)
+### Tailscale (recommended)
 
+Run Pagerr on your server and access it from any device on your tailnet without opening any ports.
+
+```
 http://your-tailscale-ip:10000
-
-No ports exposed. No firewall changes required.
+```
 
 ### Reverse Proxy
 
-Works with Traefik, Caddy, Nginx Proxy Manager, etc.\
-Point the proxy to port `10000`.
+Pagerr works behind Traefik, Caddy, Nginx Proxy Manager, or any other proxy. Point it at the container port and you're done.
 
-------------------------------------------------------------------------
+---
 
 ## Install as Home Screen App
 
-Pagerr works like an app when added to your phone home screen.
+Pagerr works as a PWA — add it to your phone home screen for a full-screen, app-like experience.
 
-**iOS:** Share → Add to Home Screen\
-**Android:** Menu → Add to Home Screen / Install App
+**iOS (Safari):** Share → Add to Home Screen
 
-Launches full-screen.
+**Android (Chrome):** Menu → Add to Home Screen / Install App
 
-------------------------------------------------------------------------
+---
+
+## Browser Compatibility
+
+| Feature | Chrome | Firefox | Safari | Edge |
+|---|---|---|---|---|
+| PIN lock | ✅ | ✅ | ✅ | ✅ |
+| Biometric unlock | ⚠️ | ✅ | ⚠️ | ⚠️ |
+| Add to home screen | ✅ | ✅ | ✅ | ✅ |
+| Auto-login | ✅ | ✅ | ✅ | ✅ |
+
+Biometric support outside Firefox depends on your OS and browser version. PIN is always available as a fallback.
+
+---
 
 ## Security Notes
 
--   All data is stored in browser `localStorage`
--   Credentials are stored locally (not encrypted)
--   The lock screen is a convenience barrier, not cryptographic
-    protection
--   HTTPS is strongly recommended
--   Best used behind Tailscale or a VPN
+- All data is stored in your browser's `localStorage` — nothing is sent anywhere
+- Credentials are stored in plaintext in `localStorage` — the lock screen is a convenience lock, not encryption
+- Serving over HTTPS is strongly recommended — Tailscale handles this automatically
+- For reverse proxy setups, terminate TLS at the proxy level
 
-------------------------------------------------------------------------
+---
 
-## Project Status
+## Personal Project
 
-Pagerr is a personal project shared publicly.
+Pagerr is a personal project. It is shared publicly for anyone who finds it useful but is **not actively maintained as an open source project**. Issues and pull requests are not monitored.
 
-It is stable and intentionally minimal.
+If it works for you, great. If something is broken, feel free to fork it.
 
-If it fits your workflow, use it.\
-If not, fork it.
-
-------------------------------------------------------------------------
+---
 
 ## License
 
-MIT --- see LICENSE.
+MIT — see [LICENSE](LICENSE) for details.
 
-------------------------------------------------------------------------
+---
 
 *Built for homelabbers, by a homelabber.*
