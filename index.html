@@ -3054,7 +3054,9 @@ function openEncryptModal(mode) {
 
   if (mode === 'export') {
     title.textContent = 'Encrypt Export';
-    sub.textContent = 'Set a password to encrypt your config.\nYou will need it to import on another device.';
+    sub.textContent = _hasCrypto
+      ? 'AES-256 encryption (HTTPS). Set a password — you will need it to import.'
+      : 'Password protection (HTTP). For stronger encryption, serve Pagerr over HTTPS.';
     btn.textContent = 'Export';
     confirm.style.display = 'block';
     confirm.value = '';
@@ -3089,6 +3091,8 @@ function doEncryptAction() {
 }
 
 // ── Crypto helpers ──
+var _hasCrypto = !!(window.crypto && window.crypto.subtle);
+
 function strToBytes(str) {
   return new TextEncoder().encode(str);
 }
@@ -3111,6 +3115,7 @@ function b64ToBuf(b64) {
   return bytes.buffer;
 }
 
+// ── AES-256-GCM (HTTPS only) ──
 async function deriveKey(password, salt) {
   var keyMaterial = await crypto.subtle.importKey(
     'raw', strToBytes(password), 'PBKDF2', false, ['deriveKey']
@@ -3124,16 +3129,11 @@ async function deriveKey(password, salt) {
   );
 }
 
-async function encryptData(plaintext, password) {
+async function encryptAES(plaintext, password) {
   var salt = crypto.getRandomValues(new Uint8Array(16));
   var iv   = crypto.getRandomValues(new Uint8Array(12));
   var key  = await deriveKey(password, salt);
-  var enc  = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv: iv },
-    key,
-    strToBytes(plaintext)
-  );
-  // Pack: salt(16) + iv(12) + ciphertext
+  var enc  = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, strToBytes(plaintext));
   var result = new Uint8Array(16 + 12 + enc.byteLength);
   result.set(salt, 0);
   result.set(iv, 16);
@@ -3141,18 +3141,45 @@ async function encryptData(plaintext, password) {
   return bufToB64(result.buffer);
 }
 
-async function decryptData(b64, password) {
-  var buf   = new Uint8Array(b64ToBuf(b64));
-  var salt  = buf.slice(0, 16);
-  var iv    = buf.slice(16, 28);
-  var data  = buf.slice(28);
-  var key   = await deriveKey(password, salt);
-  var dec   = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv: iv },
-    key,
-    data
-  );
+async function decryptAES(b64, password) {
+  var buf  = new Uint8Array(b64ToBuf(b64));
+  var salt = buf.slice(0, 16);
+  var iv   = buf.slice(16, 28);
+  var data = buf.slice(28);
+  var key  = await deriveKey(password, salt);
+  var dec  = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, key, data);
   return bytesToStr(dec);
+}
+
+// ── XOR obfuscation fallback (HTTP) ──
+// Not cryptographically secure but prevents casual reading
+function xorEncrypt(plaintext, password) {
+  // Stretch password into a keystream using a simple hash mix
+  var key = [];
+  for (var i = 0; i < 64; i++) {
+    key.push(password.charCodeAt(i % password.length) ^ (i * 31 + 7));
+  }
+  var bytes = strToBytes(plaintext);
+  var out = new Uint8Array(bytes.length);
+  for (var j = 0; j < bytes.length; j++) {
+    out[j] = bytes[j] ^ key[j % key.length];
+  }
+  return btoa(String.fromCharCode.apply(null, out));
+}
+
+function xorDecrypt(b64, password) {
+  var key = [];
+  for (var i = 0; i < 64; i++) {
+    key.push(password.charCodeAt(i % password.length) ^ (i * 31 + 7));
+  }
+  var bin = atob(b64);
+  var bytes = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  var out = new Uint8Array(bytes.length);
+  for (var j = 0; j < bytes.length; j++) {
+    out[j] = bytes[j] ^ key[j % key.length];
+  }
+  return bytesToStr(out);
 }
 
 // ── Export ──
@@ -3175,14 +3202,22 @@ async function doEncryptedExport() {
 
   try {
     var payload = { version: 2, exportedAt: Date.now(), state: state };
-    var json    = JSON.stringify(payload);
-    var encrypted = await encryptData(json, pw);
+    var json = JSON.stringify(payload);
+    var encrypted, method;
 
-    var bundle = JSON.stringify({ pagerr: true, v: 2, encrypted: encrypted });
-    var blob   = new Blob([bundle], { type: 'application/json' });
-    var url    = URL.createObjectURL(blob);
-    var a      = document.createElement('a');
-    a.href     = url;
+    if (_hasCrypto) {
+      encrypted = await encryptAES(json, pw);
+      method = 'aes256';
+    } else {
+      encrypted = xorEncrypt(json, pw);
+      method = 'xor';
+    }
+
+    var bundle = JSON.stringify({ pagerr: true, v: 2, method: method, encrypted: encrypted });
+    var blob = new Blob([bundle], { type: 'application/json' });
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    a.href   = url;
     a.download = 'pagerr-config.json';
     document.body.appendChild(a);
     a.click();
@@ -3190,9 +3225,10 @@ async function doEncryptedExport() {
     URL.revokeObjectURL(url);
 
     closeEncryptModal();
-    showToast('Config exported & encrypted ✓');
+    var label = _hasCrypto ? 'AES-256 encrypted' : 'password protected';
+    showToast('Config exported (' + label + ') ✓');
   } catch(e) {
-    msg.textContent = 'Encryption failed: ' + e.message;
+    msg.textContent = 'Export failed: ' + e.message;
   }
 
   document.getElementById('encryptActionBtn').disabled = false;
@@ -3246,9 +3282,21 @@ async function doEncryptedImport() {
   document.getElementById('encryptActionBtn').disabled = true;
 
   try {
-    var plaintext = await decryptData(_importFile.encrypted, pw);
-    var parsed    = JSON.parse(plaintext);
+    var plaintext;
+    var method = _importFile.method || 'aes256';
 
+    if (method === 'aes256') {
+      if (!_hasCrypto) {
+        msg.textContent = 'This file was encrypted with AES-256 and requires HTTPS to decrypt. Serve Pagerr over HTTPS and try again.';
+        document.getElementById('encryptActionBtn').disabled = false;
+        return;
+      }
+      plaintext = await decryptAES(_importFile.encrypted, pw);
+    } else {
+      plaintext = xorDecrypt(_importFile.encrypted, pw);
+    }
+
+    var parsed = JSON.parse(plaintext);
     if (!parsed.version || !parsed.state) {
       msg.textContent = 'Invalid config data';
       document.getElementById('encryptActionBtn').disabled = false;
