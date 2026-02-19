@@ -1102,11 +1102,18 @@ body {
   text-align: center;
   transition: all .15s;
   display: flex; flex-direction: column; align-items: center; gap: 4px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
+.data-btn:focus { outline: none; box-shadow: none; }
 .data-btn:hover { border-color: var(--accent); color: var(--accent); }
-.data-btn-icon { font-size: 20px; }
-.data-btn-label { font-size: 10px; font-family: 'DM Mono', monospace; letter-spacing: 1px; }
+.data-btn:active { opacity: 0.75; transform: scale(0.97); }
+.data-btn-icon { font-size: 20px; pointer-events: none; }
+.data-btn-label { font-size: 10px; font-family: 'DM Mono', monospace; letter-spacing: 1px; pointer-events: none; }
 
 .data-btn.accent {
   background: var(--accent-bg);
@@ -1495,7 +1502,7 @@ body {
   <div class="settings-section">
     <div class="settings-section-label">Data &amp; Transfer</div>
     <div class="data-btn-row">
-      <button class="data-btn accent" onclick="exportConfig()">
+      <button class="data-btn" onclick="exportConfig()">
         <span class="data-btn-icon">⬇️</span>
         <span class="data-btn-label">EXPORT JSON</span>
       </button>
@@ -1507,6 +1514,23 @@ body {
     <input type="file" id="importFileInput" accept=".json,application/json" style="display:none;" onchange="importConfig(this.files[0])">
   </div>
 
+</div>
+
+<!-- ═══ V2: ENCRYPT MODAL ═══ -->
+<div class="qr-modal-overlay" id="encryptModal" onclick="closeEncryptModal(event)">
+  <div class="qr-modal" id="encryptModalInner">
+    <div class="qr-modal-title" id="encryptModalTitle">Encrypt Export</div>
+    <div class="qr-modal-sub" id="encryptModalSub">Set a password to encrypt your config.<br>You will need it to import.</div>
+    <div style="width:100%;display:flex;flex-direction:column;gap:10px;">
+      <input class="form-input" type="password" id="encryptPassword" placeholder="Password" autocomplete="new-password">
+      <input class="form-input" type="password" id="encryptConfirm" placeholder="Confirm password" autocomplete="new-password" style="display:none;">
+      <div style="font-size:11px;color:#e05555;font-family:'DM Mono',monospace;min-height:16px;" id="encryptMsg"></div>
+    </div>
+    <div style="display:flex;gap:10px;width:100%;">
+      <button class="btn-secondary" style="flex:1;" onclick="closeEncryptModal()">Cancel</button>
+      <button class="btn-save" style="flex:2;" id="encryptActionBtn" onclick="doEncryptAction()">Export</button>
+    </div>
+  </div>
 </div>
 
 <!-- ═══ V2: REORDER BANNER ═══ -->
@@ -3005,24 +3029,172 @@ function swapServices(aId, bId) {
 /* ══════════════════════════════════════════
    V2 ② — JSON EXPORT / IMPORT
 ══════════════════════════════════════════ */
-function exportConfig() {
-  var payload = {
-    version: 2,
-    exportedAt: Date.now(),
-    state: state
-  };
-  var json = JSON.stringify(payload, null, 2);
-  var blob = new Blob([json], { type: 'application/json' });
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = 'pagerr-config.json';
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('Config exported ✓');
-  closeSettings();
+/* ══════════════════════════════════════════
+   V2 ② — ENCRYPTED JSON EXPORT / IMPORT
+   Uses Web Crypto API (AES-GCM + PBKDF2)
+   No external dependencies
+══════════════════════════════════════════ */
+
+var _encryptMode = null; // 'export' or 'import'
+var _importFile = null;
+
+// ── Modal helpers ──
+function openEncryptModal(mode) {
+  _encryptMode = mode;
+  var modal = document.getElementById('encryptModal');
+  var title = document.getElementById('encryptModalTitle');
+  var sub = document.getElementById('encryptModalSub');
+  var btn = document.getElementById('encryptActionBtn');
+  var confirm = document.getElementById('encryptConfirm');
+  var pw = document.getElementById('encryptPassword');
+  var msg = document.getElementById('encryptMsg');
+
+  pw.value = '';
+  msg.textContent = '';
+
+  if (mode === 'export') {
+    title.textContent = 'Encrypt Export';
+    sub.textContent = 'Set a password to encrypt your config.\nYou will need it to import on another device.';
+    btn.textContent = 'Export';
+    confirm.style.display = 'block';
+    confirm.value = '';
+  } else {
+    title.textContent = 'Decrypt Import';
+    sub.textContent = 'Enter the password used when this file was exported.';
+    btn.textContent = 'Import';
+    confirm.style.display = 'none';
+  }
+
+  modal.classList.add('active');
+  setTimeout(function() { modal.classList.add('visible'); }, 10);
+  setTimeout(function() { pw.focus(); }, 150);
 }
 
+function closeEncryptModal(e) {
+  if (e && e.target !== document.getElementById('encryptModal')) return;
+  var modal = document.getElementById('encryptModal');
+  modal.classList.remove('visible');
+  setTimeout(function() { modal.classList.remove('active'); }, 250);
+  _importFile = null;
+  _encryptMode = null;
+}
+
+function doEncryptAction() {
+  if (_encryptMode === 'export') doEncryptedExport();
+  else doEncryptedImport();
+}
+
+// ── Crypto helpers ──
+function strToBytes(str) {
+  return new TextEncoder().encode(str);
+}
+
+function bytesToStr(buf) {
+  return new TextDecoder().decode(buf);
+}
+
+function bufToB64(buf) {
+  var bytes = new Uint8Array(buf);
+  var bin = '';
+  bytes.forEach(function(b) { bin += String.fromCharCode(b); });
+  return btoa(bin);
+}
+
+function b64ToBuf(b64) {
+  var bin = atob(b64);
+  var bytes = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes.buffer;
+}
+
+async function deriveKey(password, salt) {
+  var keyMaterial = await crypto.subtle.importKey(
+    'raw', strToBytes(password), 'PBKDF2', false, ['deriveKey']
+  );
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: salt, iterations: 250000, hash: 'SHA-256' },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+async function encryptData(plaintext, password) {
+  var salt = crypto.getRandomValues(new Uint8Array(16));
+  var iv   = crypto.getRandomValues(new Uint8Array(12));
+  var key  = await deriveKey(password, salt);
+  var enc  = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: iv },
+    key,
+    strToBytes(plaintext)
+  );
+  // Pack: salt(16) + iv(12) + ciphertext
+  var result = new Uint8Array(16 + 12 + enc.byteLength);
+  result.set(salt, 0);
+  result.set(iv, 16);
+  result.set(new Uint8Array(enc), 28);
+  return bufToB64(result.buffer);
+}
+
+async function decryptData(b64, password) {
+  var buf   = new Uint8Array(b64ToBuf(b64));
+  var salt  = buf.slice(0, 16);
+  var iv    = buf.slice(16, 28);
+  var data  = buf.slice(28);
+  var key   = await deriveKey(password, salt);
+  var dec   = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: iv },
+    key,
+    data
+  );
+  return bytesToStr(dec);
+}
+
+// ── Export ──
+function exportConfig() {
+  closeSettings();
+  openEncryptModal('export');
+}
+
+async function doEncryptedExport() {
+  var pw  = document.getElementById('encryptPassword').value;
+  var pw2 = document.getElementById('encryptConfirm').value;
+  var msg = document.getElementById('encryptMsg');
+
+  if (!pw) { msg.textContent = 'Enter a password'; return; }
+  if (pw !== pw2) { msg.textContent = 'Passwords do not match'; return; }
+  if (pw.length < 4) { msg.textContent = 'Password must be at least 4 characters'; return; }
+
+  msg.textContent = 'Encrypting…';
+  document.getElementById('encryptActionBtn').disabled = true;
+
+  try {
+    var payload = { version: 2, exportedAt: Date.now(), state: state };
+    var json    = JSON.stringify(payload);
+    var encrypted = await encryptData(json, pw);
+
+    var bundle = JSON.stringify({ pagerr: true, v: 2, encrypted: encrypted });
+    var blob   = new Blob([bundle], { type: 'application/json' });
+    var url    = URL.createObjectURL(blob);
+    var a      = document.createElement('a');
+    a.href     = url;
+    a.download = 'pagerr-config.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    closeEncryptModal();
+    showToast('Config exported & encrypted ✓');
+  } catch(e) {
+    msg.textContent = 'Encryption failed: ' + e.message;
+  }
+
+  document.getElementById('encryptActionBtn').disabled = false;
+}
+
+// ── Import ──
 function triggerImport() {
   document.getElementById('importFileInput').value = '';
   document.getElementById('importFileInput').click();
@@ -3034,6 +3206,16 @@ function importConfig(file) {
   reader.onload = function(e) {
     try {
       var parsed = JSON.parse(e.target.result);
+
+      // Encrypted bundle
+      if (parsed.pagerr && parsed.encrypted) {
+        _importFile = parsed;
+        closeSettings();
+        openEncryptModal('import');
+        return;
+      }
+
+      // Plain JSON (legacy / unencrypted)
       if (!parsed.version || !parsed.state) {
         showToast('Invalid Pagerr config');
         return;
@@ -3044,10 +3226,41 @@ function importConfig(file) {
       showToast('Imported ✓ — reloading…');
       setTimeout(function() { location.reload(); }, 800);
     } catch (err) {
-      showToast('Import failed — invalid JSON');
+      showToast('Import failed — invalid file');
     }
   };
   reader.readAsText(file);
+}
+
+async function doEncryptedImport() {
+  var pw  = document.getElementById('encryptPassword').value;
+  var msg = document.getElementById('encryptMsg');
+
+  if (!pw) { msg.textContent = 'Enter the password'; return; }
+
+  msg.textContent = 'Decrypting…';
+  document.getElementById('encryptActionBtn').disabled = true;
+
+  try {
+    var plaintext = await decryptData(_importFile.encrypted, pw);
+    var parsed    = JSON.parse(plaintext);
+
+    if (!parsed.version || !parsed.state) {
+      msg.textContent = 'Invalid config data';
+      document.getElementById('encryptActionBtn').disabled = false;
+      return;
+    }
+
+    closeEncryptModal();
+    if (!confirm('Replace current config with imported data? This cannot be undone.')) return;
+    state = parsed.state;
+    save();
+    showToast('Imported & decrypted ✓ — reloading…');
+    setTimeout(function() { location.reload(); }, 800);
+  } catch(e) {
+    msg.textContent = 'Wrong password or corrupted file';
+    document.getElementById('encryptActionBtn').disabled = false;
+  }
 }
 
 /* ══════════════════════════════════════════
