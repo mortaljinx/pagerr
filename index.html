@@ -1517,7 +1517,7 @@ body {
 </div>
 
 <!-- ═══ V2: ENCRYPT MODAL ═══ -->
-<div class="qr-modal-overlay" id="encryptModal" onclick="closeEncryptModal(event)">
+<div class="qr-modal-overlay" id="encryptModal" onclick="closeEncryptModal(event)" style="display:none;opacity:0;">
   <div class="qr-modal" id="encryptModalInner">
     <div class="qr-modal-title" id="encryptModalTitle">Encrypt Export</div>
     <div class="qr-modal-sub" id="encryptModalSub">Set a password to encrypt your config.<br>You will need it to import.</div>
@@ -3065,6 +3065,7 @@ function openEncryptModal(mode) {
     confirm.style.display = 'none';
   }
 
+  modal.style.display = 'flex';
   modal.classList.add('active');
   setTimeout(function() { modal.classList.add('visible'); }, 10);
   setTimeout(function() { pw.focus(); }, 150);
@@ -3074,7 +3075,10 @@ function closeEncryptModal(e) {
   if (e && e.target !== document.getElementById('encryptModal')) return;
   var modal = document.getElementById('encryptModal');
   modal.classList.remove('visible');
-  setTimeout(function() { modal.classList.remove('active'); }, 250);
+  setTimeout(function() {
+    modal.classList.remove('active');
+    modal.style.display = 'none';
+  }, 250);
   _importFile = null;
   _encryptMode = null;
 }
