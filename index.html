@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Pagerr v2 – JSON Fix Build</title>
+</head>
+<body>
+
+<!--
+This build includes:
+
+1) Export button is neutral (no default accent class)
+   Correct version:
+   <button class="data-btn" onclick="exportConfig()">
+
+2) Updated exportConfig() function (see below)
+-->
+
+<script>
+
+
+async function exportConfig() {
+  const passphrase = prompt("Enter passphrase to encrypt export:");
+  if (!passphrase) return;
+
+  const payload = {
+    version: 1,
+    exportedAt: Date.now(),
+    state: state
+  };
+
+  const enc = new TextEncoder();
+  const data = enc.encode(JSON.stringify(payload));
+
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(passphrase),
+    { name: "PBKDF2" },
+    false,
+    ["deriveKey"]
+  );
+
+  const key = await crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt: salt,
+      iterations: 150000,
+      hash: "SHA-256"
+    },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv: iv },
+    key,
+    data
+  );
+
+  const encryptedPayload = {
+    version: 1,
+    encrypted: true,
+    salt: btoa(String.fromCharCode(...salt)),
+    iv: btoa(String.fromCharCode(...iv)),
+    data: btoa(String.fromCharCode(...new Uint8Array(ciphertext)))
+  };
+
+  const blob = new Blob(
+    [JSON.stringify(encryptedPayload, null, 2)],
+    { type: "application/json" }
+  );
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "pagerr-config-encrypted.json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+
+  alert("Encrypted export complete.");
+}
+
+
+</script>
+
+<p>Replace your exportConfig() with the version above.</p>
+
+</body>
+</html>
