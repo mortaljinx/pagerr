@@ -3104,7 +3104,9 @@ function bytesToStr(buf) {
 function bufToB64(buf) {
   var bytes = new Uint8Array(buf);
   var bin = '';
-  bytes.forEach(function(b) { bin += String.fromCharCode(b); });
+  for (var i = 0; i < bytes.length; i++) {
+    bin += String.fromCharCode(bytes[i]);
+  }
   return btoa(bin);
 }
 
@@ -3164,7 +3166,9 @@ function xorEncrypt(plaintext, password) {
   for (var j = 0; j < bytes.length; j++) {
     out[j] = bytes[j] ^ key[j % key.length];
   }
-  return btoa(String.fromCharCode.apply(null, out));
+  var bin = '';
+  for (var k = 0; k < out.length; k++) bin += String.fromCharCode(out[k]);
+  return btoa(bin);
 }
 
 function xorDecrypt(b64, password) {
