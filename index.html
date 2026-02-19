@@ -3201,7 +3201,13 @@ async function doEncryptedExport() {
   document.getElementById('encryptActionBtn').disabled = true;
 
   try {
-    var payload = { version: 2, exportedAt: Date.now(), state: state };
+    var payload = {
+      version: 2,
+      exportedAt: Date.now(),
+      state: state,
+      serverName: localStorage.getItem('pagerr_server_name') || '',
+      serverLogo: localStorage.getItem('pagerr_server_logo') || ''
+    };
     var json = JSON.stringify(payload);
     var encrypted, method;
 
@@ -3263,6 +3269,8 @@ function importConfig(file) {
       if (!confirm('Replace current config with imported data? This cannot be undone.')) return;
       state = parsed.state;
       save();
+      if (parsed.serverName) localStorage.setItem('pagerr_server_name', parsed.serverName);
+      if (parsed.serverLogo) localStorage.setItem('pagerr_server_logo', parsed.serverLogo);
       showToast('Imported ✓ — reloading…');
       setTimeout(function() { location.reload(); }, 800);
     } catch (err) {
@@ -3307,6 +3315,8 @@ async function doEncryptedImport() {
     if (!confirm('Replace current config with imported data? This cannot be undone.')) return;
     state = parsed.state;
     save();
+    if (parsed.serverName) localStorage.setItem('pagerr_server_name', parsed.serverName);
+    if (parsed.serverLogo) localStorage.setItem('pagerr_server_logo', parsed.serverLogo);
     showToast('Imported & decrypted ✓ — reloading…');
     setTimeout(function() { location.reload(); }, 800);
   } catch(e) {
