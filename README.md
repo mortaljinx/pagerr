@@ -8,6 +8,7 @@
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
+![Docker Pulls](https://img.shields.io/docker/pulls/mortaljinx/pagerr)
 ![Self-hosted](https://img.shields.io/badge/Self--hosted-yes-22c55e)
 ![Tailscale](https://img.shields.io/badge/Tailscale-friendly-4d8eff)
 
@@ -47,6 +48,12 @@ Built for Tailscale. Works behind any reverse proxy.
 ## Quickstart
 
 ```bash
+docker run -d -p 10000:80 --name pagerr mortaljinx/pagerr:latest
+```
+
+Or with Docker Compose:
+
+```bash
 git clone https://github.com/mortaljinx/pagerr.git
 cd pagerr
 docker compose up -d
@@ -58,34 +65,23 @@ On first launch you'll set a PIN and optionally a server name and logo.
 
 ---
 
-## Serve Without Docker
-
-Because Pagerr is a single HTML file you can serve it with anything:
-
-```bash
-# Python
-python3 -m http.server 10000
-
-# Node
-npx serve . -p 10000
-```
-
-Or just open `pagerr.html` directly in a browser.
-
----
-
 ## Docker Compose
 
 ```yaml
 services:
   pagerr:
-    image: nginx:alpine
+    image: mortaljinx/pagerr:latest
     container_name: pagerr
     ports:
       - "10000:80"
-    volumes:
-      - ./index.html:/usr/share/nginx/html/index.html:ro
+    security_opt:
+      - no-new-privileges:true
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 ```
 
 ---
@@ -93,8 +89,8 @@ services:
 ## Updating
 
 ```bash
-git pull
-docker restart pagerr
+docker pull mortaljinx/pagerr:latest
+docker compose down && docker compose up -d
 ```
 
 Your data lives in `localStorage` in your browser — updating never touches your services or settings.

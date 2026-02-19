@@ -1,11 +1,9 @@
 services:
   pagerr:
-    image: nginx:alpine
+    image: mortaljinx/pagerr:latest
     container_name: pagerr
     ports:
       - "10000:80"
-    volumes:
-      - ./index.html:/usr/share/nginx/html/index.html:ro
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
