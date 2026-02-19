@@ -35,7 +35,7 @@ Built for Tailscale. Works behind any reverse proxy.
 - **Categories** — organise services into labelled groups
 - **Reorder** — tap ⇅ reorder to rearrange services, swap across categories
 - **Auto-login** — stores credentials and auto-submits login forms for supported services
-- **JSON export / import** — back up your config or transfer it to another device
+- **Encrypted JSON export / import** — back up and transfer your config with password protection
 - **Dark & light theme** — smooth, switchable
 - **Customisable display** — icon size, text size, toggleable service labels
 - **Custom branding** — upload your own server logo and name
@@ -84,7 +84,7 @@ services:
     ports:
       - "10000:80"
     volumes:
-      - ./pagerr.html:/usr/share/nginx/html/index.html:ro
+      - ./index.html:/usr/share/nginx/html/index.html:ro
     restart: unless-stopped
 ```
 
@@ -103,11 +103,18 @@ Your data lives in `localStorage` in your browser — updating never touches you
 
 ## Backup & Restore
 
-Settings → **Export JSON** saves a `pagerr-config.json` file with all your services, categories, and settings.
+Settings → **Export JSON** prompts for a password and downloads an encrypted `pagerr-config.json` containing all your services, categories, credentials, server name and logo.
 
-To restore or move to another device: Settings → **Import JSON** → pick the file.
+To restore or transfer to another device: Settings → **Import JSON** → pick the file → enter the password.
 
-Keep a copy of your export somewhere safe. If you clear your browser storage, this is your only recovery option.
+**Encryption method depends on how Pagerr is served:**
+
+| Protocol | Method |
+|---|---|
+| HTTPS | AES-256-GCM with PBKDF2 key derivation |
+| HTTP | Password-based obfuscation |
+
+For full AES-256 encryption, serve Pagerr over HTTPS using a reverse proxy with TLS, or via Tailscale HTTPS.
 
 ---
 
@@ -145,7 +152,7 @@ http://your-tailscale-ip:10000
 
 ### Reverse Proxy
 
-Pagerr works behind Traefik, Caddy, Nginx Proxy Manager, or any other proxy. Point it at the container port and you're done.
+Pagerr works behind Traefik, Caddy, Nginx Proxy Manager, or any other proxy. Point it at the container port and you're done. Using HTTPS here also unlocks AES-256 encryption for exports.
 
 ---
 
@@ -167,6 +174,7 @@ Pagerr works as a PWA — add it to your phone home screen for a full-screen, ap
 | Biometric unlock | ⚠️ | ✅ | ⚠️ | ⚠️ |
 | Add to home screen | ✅ | ✅ | ✅ | ✅ |
 | Auto-login | ✅ | ✅ | ✅ | ✅ |
+| AES-256 export | ✅ HTTPS only | ✅ HTTPS only | ✅ HTTPS only | ✅ HTTPS only |
 
 Biometric support outside Firefox depends on your OS and browser version. PIN is always available as a fallback.
 
@@ -176,6 +184,7 @@ Biometric support outside Firefox depends on your OS and browser version. PIN is
 
 - All data is stored in your browser's `localStorage` — nothing is sent anywhere
 - Credentials are stored in plaintext in `localStorage` — the lock screen is a convenience lock, not encryption
+- Exported configs are encrypted with AES-256-GCM over HTTPS, or password-obfuscated over HTTP
 - Serving over HTTPS is strongly recommended — Tailscale handles this automatically
 - For reverse proxy setups, terminate TLS at the proxy level
 
