@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Pagerr v2 – JSON Fix Build</title>
+</head>
+<body>
+
+<!--
+This build includes:
+
+1) Export button is neutral (no default accent class)
+   Correct version:
+   <button class="data-btn" onclick="exportEncryptedConfig()">
+
+2) Updated exportConfig() function (see below)
+-->
+
+<script>
+
+function exportConfig() {
+  var payload = {
+    version: 2,
+    exportedAt: Date.now(),
+    state: state
+  };
+
+  var json = JSON.stringify(payload, null, 2);
+  var blob = new Blob([json], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'pagerr-config.json';
+  a.style.display = 'none';
+  a.tabIndex = -1;
+  a.setAttribute('aria-hidden', 'true';
+  document.body.appendChild(a);
+
+  a.click();
+
+  setTimeout(function () {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    if (document.activeElement) document.activeElement.blur();
+  }, 0);
+
+  showToast('Config exported ✓');
+  closeSettings();
+}
+
+
+/* ================================
+   ENCRYPTED EXPORT / IMPORT (AES-GCM)
+================================ */
+
+function bufToBase64(buf) {
+  return btoa(String.fromCharCode(...new Uint8Array(buf)));
+}
+
+function base64ToBuf(base64) {
+  return Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+}
+
+async function deriveKey(passphrase, salt) {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(passphrase),
+    { name: "PBKDF2" },
+    false,
+    ["deriveKey"]
+  );
+
+  return crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt: salt,
+      iterations: 150000,
+      hash: "SHA-256"
+    },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+}
+
+async function exportEncryptedConfig() {
+  const passphrase = prompt("Enter passphrase to encrypt export:");
+  if (!passphrase) return;
+
+  const payload = {
+    version: 2,
+    exportedAt: Date.now(),
+    state: state
+  };
+
+  const enc = new TextEncoder();
+  const data = enc.encode(JSON.stringify(payload));
+
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+
+  const key = await deriveKey(passphrase, salt);
+
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv: iv },
+    key,
+    data
+  );
+
+  const encryptedPayload = {
+    version: 2,
+    encrypted: true,
+    salt: bufToBase64(salt),
+    iv: bufToBase64(iv),
+    data: bufToBase64(ciphertext)
+  };
+
+  const blob = new Blob(
+    [JSON.stringify(encryptedPayload, null, 2)],
+    { type: "application/json" }
+  );
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "pagerr-config-encrypted.json";
+  a.click();
+  URL.revokeObjectURL(url);
+
+  showToast("Encrypted export complete ✓");
+}
+
+async function importConfigFile(file) {
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = async function(e) {
+    try {
+      const parsed = JSON.parse(e.target.result);
+
+      if (parsed.encrypted) {
+        const passphrase = prompt("Enter passphrase to decrypt:");
+        if (!passphrase) return;
+
+        const salt = base64ToBuf(parsed.salt);
+        const iv = base64ToBuf(parsed.iv);
+        const data = base64ToBuf(parsed.data);
+
+        const key = await deriveKey(passphrase, salt);
+
+        const decrypted = await crypto.subtle.decrypt(
+          { name: "AES-GCM", iv: iv },
+          key,
+          data
+        );
+
+        const dec = new TextDecoder();
+        const finalPayload = JSON.parse(dec.decode(decrypted));
+        state = finalPayload.state;
+      } else {
+        state = parsed.state;
+      }
+
+      save();
+      showToast("Import successful ✓ — reloading…");
+      setTimeout(() => location.reload(), 800);
+
+    } catch (err) {
+      alert("Import failed. Wrong passphrase or corrupted file.");
+    }
+  };
+
+  reader.readAsText(file);
+}
+
+</script>
+
+<p>Replace your exportConfig() with the version above.</p>
+
+</body>
+</html>
