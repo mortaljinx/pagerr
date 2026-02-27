@@ -4,6 +4,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.1.1] — 2026-02-27
+
+### Security
+- **PBKDF2 PIN hashing** — PIN is now hashed with 100,000 iterations of SHA-256 via Web Crypto API before being stored in localStorage. Never stored in plain text over HTTPS. Existing plain PINs are automatically migrated to hashed on next successful login
+- **Content Security Policy** — CSP meta tag added restricting script sources, preventing unauthorised script injection
+
+---
+
 ## [2.1.0] — 2026-02-27
 
 ### Added
@@ -11,11 +19,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Disable lock screen** — Settings → Lock Screen → toggle off to skip PIN entirely. Lock button in header hides automatically. Toggle back on to re-enable
 - **Docker Hub image** — `mortaljinx/pagerr:latest` published to Docker Hub. Deploy with a single `docker run` command, no file download needed
 - **GitHub Actions** — automatic build and push to Docker Hub on every push to main, for both `amd64` and `arm64`
+- **Version label** — current version displayed at the bottom of the Settings panel
 
 ### Changed
 - Lock and settings buttons in header increased in size for easier tapping on mobile
 - Add service sheet no longer auto-opens after creating a first category
 - Change PIN section hidden automatically when lock screen is disabled
+- Status dot reduced to 6px for subtlety
 
 ### Fixed
 - Export JSON button no longer shows highlight ring or requires double-tap on mobile

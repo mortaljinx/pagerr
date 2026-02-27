@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src * data: blob:; connect-src *;">
 <title>Pagerr</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -1545,7 +1546,7 @@ body {
 
   <!-- Version -->
   <div style="text-align:center;padding:16px 0 8px;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:1px;">
-    PAGERR v2.1
+    PAGERR v2.1.1
   </div>
 
 </div>
@@ -1918,6 +1919,48 @@ function setTheme(t) {
 }
 
 /* ══════════════════════════════════════════
+   PIN HASHING — PBKDF2 via Web Crypto
+   Falls back to plain storage if crypto
+   unavailable (HTTP without subtle)
+══════════════════════════════════════════ */
+var PIN_SALT = 'pagerr-pin-salt-v1'; // static salt is fine for PIN — not a password manager
+
+async function hashPin(pin) {
+  if (!window.crypto || !window.crypto.subtle) return pin; // fallback
+  var enc = new TextEncoder();
+  var keyMaterial = await crypto.subtle.importKey(
+    'raw', enc.encode(pin), 'PBKDF2', false, ['deriveBits']
+  );
+  var bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt: enc.encode(PIN_SALT), iterations: 100000, hash: 'SHA-256' },
+    keyMaterial, 256
+  );
+  return bufToB64(bits);
+}
+
+async function storePin(pin) {
+  var hashed = await hashPin(pin);
+  localStorage.setItem('pagerr_pin', hashed);
+  localStorage.setItem('pagerr_pin_hashed', window.crypto && window.crypto.subtle ? '1' : '0');
+}
+
+async function verifyPin(pin) {
+  var stored = localStorage.getItem('pagerr_pin');
+  var isHashed = localStorage.getItem('pagerr_pin_hashed') === '1';
+  if (!stored) return false;
+  if (!isHashed) {
+    // Migrate plain PIN to hashed on first successful verify
+    if (pin === stored) {
+      await storePin(pin);
+      return true;
+    }
+    return false;
+  }
+  var hashed = await hashPin(pin);
+  return hashed === stored;
+}
+
+/* ══════════════════════════════════════════
    LOCK / UNLOCK
 ══════════════════════════════════════════ */
 function initLockScreen() {
@@ -2183,15 +2226,16 @@ function updatePinDots() {
 }
 
 function checkPin() {
-  var stored = localStorage.getItem('pagerr_pin');
-  if (pinEntry === stored) {
-    doUnlock();
-  } else {
-    document.getElementById('unlockMsg').textContent = 'Incorrect PIN';
-    pinEntry = '';
-    updatePinDots();
-    setTimeout(function() { document.getElementById('unlockMsg').textContent = ''; }, 2000);
-  }
+  verifyPin(pinEntry).then(function(ok) {
+    if (ok) {
+      doUnlock();
+    } else {
+      document.getElementById('unlockMsg').textContent = 'Incorrect PIN';
+      pinEntry = '';
+      updatePinDots();
+      setTimeout(function() { document.getElementById('unlockMsg').textContent = ''; }, 2000);
+    }
+  });
 }
 
 function doUnlock() {
@@ -2229,15 +2273,17 @@ function showTrustPrompt() {
     return;
   }
   var stored = localStorage.getItem('pagerr_pin');
-  if (pinEntry !== stored) {
-    var msg = document.getElementById('unlockMsg');
-    msg.textContent = 'Incorrect PIN';
-    pinEntry = '';
-    updatePinDots();
-    setTimeout(function() { msg.textContent = ''; }, 2000);
-    return;
-  }
-  trustThisDevice();
+  verifyPin(pinEntry).then(function(ok) {
+    if (!ok) {
+      var msg = document.getElementById('unlockMsg');
+      msg.textContent = 'Incorrect PIN';
+      pinEntry = '';
+      updatePinDots();
+      setTimeout(function() { msg.textContent = ''; }, 2000);
+      return;
+    }
+    trustThisDevice();
+  });
 }
 
 function lockApp() {
@@ -2278,27 +2324,29 @@ function doSetupPin() {
   if (!p1 || p1.length < 4) { msg.textContent = 'PIN must be at least 4 digits'; return; }
   if (p1 !== p2) { msg.textContent = 'PINs do not match'; return; }
 
-  localStorage.setItem('pagerr_pin', p1);
-  var setupName = (document.getElementById('setupServerName').value || '').trim() || 'My Server';
-  localStorage.setItem('pagerr_server_name', setupName);
-  document.getElementById('setupScreen').classList.remove('active');
-  document.getElementById('unlockScreen').classList.add('active');
-  document.getElementById('lockServerName').value = setupName;
-  var savedLogo = localStorage.getItem('pagerr_server_logo') || '';
-  if (savedLogo) {
-    document.getElementById('lockLogoImg').src = savedLogo;
-    document.getElementById('lockLogoImg').style.display = 'block';
-    document.getElementById('lockLogoEmoji').style.display = 'none';
-  }
-  initBiometric();
+  storePin(p1).then(function() {
+    var setupName = (document.getElementById('setupServerName').value || '').trim() || 'My Server';
+    localStorage.setItem('pagerr_server_name', setupName);
+    document.getElementById('setupScreen').classList.remove('active');
+    document.getElementById('unlockScreen').classList.add('active');
+    document.getElementById('lockServerName').value = setupName;
+    var savedLogo = localStorage.getItem('pagerr_server_logo') || '';
+    if (savedLogo) {
+      document.getElementById('lockLogoImg').src = savedLogo;
+      document.getElementById('lockLogoImg').style.display = 'block';
+      document.getElementById('lockLogoEmoji').style.display = 'none';
+    }
+    initBiometric();
+  });
 }
 
 function changePin() {
   var p = document.getElementById('changePinInput').value;
   if (!p || p.length < 4) { showToast('PIN must be at least 4 digits'); return; }
-  localStorage.setItem('pagerr_pin', p);
-  document.getElementById('changePinInput').value = '';
-  showToast('PIN updated ✓');
+  storePin(p).then(function() {
+    document.getElementById('changePinInput').value = '';
+    showToast('PIN updated ✓');
+  });
 }
 
 /* ══════════════════════════════════════════

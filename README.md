@@ -32,7 +32,9 @@ Built for Tailscale. Works behind any reverse proxy.
 
 - **Single file** — the entire app is one `.html` file. Serve it anywhere
 - **PIN lock** — 4–6 digit PIN set on first launch, with optional biometric unlock
+- **PBKDF2 hashed PIN** — PIN is hashed with 100,000 iterations before storage, never stored in plain text
 - **Auto icon matching** — fetches service icons automatically from [dashboard-icons](https://github.com/homarr-labs/dashboard-icons)
+- **Service status dots** — live green/red indicator on each card showing if the service is reachable
 - **Categories** — organise services into labelled groups
 - **Reorder** — tap ⇅ reorder to rearrange services, swap across categories
 - **Auto-login** — stores credentials and auto-submits login forms for supported services
@@ -171,6 +173,7 @@ Pagerr works as a PWA — add it to your phone home screen for a full-screen, ap
 | Add to home screen | ✅ | ✅ | ✅ | ✅ |
 | Auto-login | ✅ | ✅ | ✅ | ✅ |
 | AES-256 export | ✅ HTTPS only | ✅ HTTPS only | ✅ HTTPS only | ✅ HTTPS only |
+| PBKDF2 PIN hashing | ✅ HTTPS only | ✅ HTTPS only | ✅ HTTPS only | ✅ HTTPS only |
 
 Biometric support outside Firefox depends on your OS and browser version. PIN is always available as a fallback.
 
@@ -179,8 +182,10 @@ Biometric support outside Firefox depends on your OS and browser version. PIN is
 ## Security Notes
 
 - All data is stored in your browser's `localStorage` — nothing is sent anywhere
+- PIN is hashed with PBKDF2 (100,000 iterations, SHA-256) before storage — never stored in plain text over HTTPS
 - Credentials are stored in plaintext in `localStorage` — the lock screen is a convenience lock, not encryption
 - Exported configs are encrypted with AES-256-GCM over HTTPS, or password-obfuscated over HTTP
+- Content Security Policy header prevents unauthorised script execution
 - Serving over HTTPS is strongly recommended — Tailscale handles this automatically
 - For reverse proxy setups, terminate TLS at the proxy level
 
