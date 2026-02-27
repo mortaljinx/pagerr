@@ -367,12 +367,12 @@ body {
 }
 
 .icon-btn {
-  width: 34px; height: 34px;
-  border-radius: 10px;
+  width: 42px; height: 42px;
+  border-radius: 12px;
   background: var(--surface);
   border: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center;
-  font-size: 15px; cursor: pointer;
+  font-size: 20px; cursor: pointer;
   transition: border-color .15s, transform .1s;
 }
 
@@ -502,6 +502,18 @@ body {
 }
 
 .service-card:active { transform: scale(0.96); }
+
+/* Status dot */
+.status-dot {
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: background .3s;
+}
+.status-dot.online  { background: #22c55e; box-shadow: 0 0 5px #22c55e88; }
+.status-dot.offline { background: #e05555; box-shadow: 0 0 5px #e0555588; }
 
 .card-icon-wrap {
   width: 48px; height: 48px;
@@ -1283,7 +1295,7 @@ body {
       <div class="app-name">PAGERR</div>
     </div>
     <div class="header-right">
-      <div class="icon-btn" onclick="lockApp()" title="Lock">🔒</div>
+      <div class="icon-btn" id="lockBtn" onclick="lockApp()" title="Lock">🔒</div>
       <div class="icon-btn" onclick="openSettings()" title="Settings">⚙️</div>
     </div>
   </header>
@@ -1489,11 +1501,28 @@ body {
 
   <div class="settings-hr"></div>
 
-  <!-- Change PIN -->
+  <!-- Lock Settings -->
   <div class="settings-section">
-    <div class="settings-section-label">Change PIN</div>
-    <input class="form-input" type="tel" id="changePinInput" maxlength="6" placeholder="New PIN" style="margin-bottom:8px;">
-    <button class="btn-save" style="width:100%;" onclick="changePin()">Update PIN</button>
+    <div class="settings-section-label">Lock Screen</div>
+
+    <!-- Disable lock toggle -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);">Lock Screen</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px;">Require PIN to access dashboard</div>
+      </div>
+      <label class="toggle-label">
+        <input type="checkbox" id="lockEnabledToggle" onchange="toggleLockEnabled()">
+        <span class="toggle-track"></span>
+        <span class="toggle-knob"></span>
+      </label>
+    </div>
+
+    <!-- Change PIN -->
+    <div id="changePinSection">
+      <input class="form-input" type="tel" id="changePinInput" maxlength="6" placeholder="New PIN" style="margin-bottom:8px;">
+      <button class="btn-save" style="width:100%;" onclick="changePin()">Update PIN</button>
+    </div>
   </div>
 
   <div class="settings-hr"></div>
@@ -1512,6 +1541,11 @@ body {
       </button>
     </div>
     <input type="file" id="importFileInput" accept=".json,application/json" style="display:none;" onchange="importConfig(this.files[0])">
+  </div>
+
+  <!-- Version -->
+  <div style="text-align:center;padding:16px 0 8px;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:1px;">
+    PAGERR v2.1
   </div>
 
 </div>
@@ -1888,6 +1922,13 @@ function setTheme(t) {
 ══════════════════════════════════════════ */
 function initLockScreen() {
   var hasPin = localStorage.getItem('pagerr_pin');
+  var lockDisabled = localStorage.getItem('pagerr_lock_disabled') === '1';
+
+  // Skip lock entirely if disabled
+  if (lockDisabled) {
+    doUnlock();
+    return;
+  }
 
   if (hasPin && checkTrustedDevice()) {
     doUnlock();
@@ -2164,6 +2205,11 @@ function doUnlock() {
   document.getElementById('app').classList.add('visible');
   document.getElementById('fab').style.display = 'flex';
 
+  // Hide lock button if lock is disabled
+  var lockDisabled = localStorage.getItem('pagerr_lock_disabled') === '1';
+  var lockBtn = document.getElementById('lockBtn');
+  if (lockBtn) lockBtn.style.display = lockDisabled ? 'none' : 'flex';
+
   pinEntry = '';
   updatePinDots();
   loadServerIdentity();
@@ -2334,6 +2380,7 @@ function renderDash() {
 
     catServices.forEach(function(svc) {
       html += '<div class="service-card" data-svc-id="' + esc(svc.id) + '" onclick="handleCardClick(event,\'' + svc.id + '\')" oncontextmenu="handleCardContext(event,\'' + svc.id + '\')">';
+      html += '<div class="status-dot" id="dot-' + esc(svc.id) + '"></div>';
       if (svc.iconUrl) {
         html += '<div class="card-icon-wrap ' + state.iconSize + ' drag-handle" data-svc-id="' + esc(svc.id) + '"><img src="' + esc(svc.iconUrl) + '" width="44" height="44" style="object-fit:contain;-webkit-user-drag:none;pointer-events:none;" onerror="this.parentNode.innerHTML=\'' + esc(getEmoji(svc.name)) + '\'"></div>';
       } else {
@@ -2357,6 +2404,56 @@ function renderDash() {
     var name = wrap.getAttribute('data-icon-name');
     wrap.appendChild(buildIconEl(name, 44));
   });
+
+  // Ping services for status dots
+  pingAllServices();
+}
+
+/* ══════════════════════════════════════════
+   STATUS DOTS — ping each service URL
+══════════════════════════════════════════ */
+var _pingTimers = [];
+
+function pingAllServices() {
+  // Clear any previous ping timers
+  _pingTimers.forEach(clearTimeout);
+  _pingTimers = [];
+
+  state.services.forEach(function(svc) {
+    if (!svc.url) return;
+    pingSvc(svc);
+  });
+}
+
+function pingSvc(svc) {
+  var dot = document.getElementById('dot-' + svc.id);
+  if (!dot) return;
+
+  var img = new Image();
+  var done = false;
+  var url = svc.url.replace(/\/$/, '') + '/favicon.ico?_=' + Date.now();
+
+  function setStatus(online) {
+    if (done) return;
+    done = true;
+    var d = document.getElementById('dot-' + svc.id);
+    if (d) {
+      d.classList.remove('online', 'offline');
+      d.classList.add(online ? 'online' : 'offline');
+    }
+  }
+
+  // Timeout after 5s = offline
+  var t = setTimeout(function() { setStatus(false); }, 5000);
+  _pingTimers.push(t);
+
+  img.onload  = function() { clearTimeout(t); setStatus(true); };
+  img.onerror = function() {
+    clearTimeout(t);
+    // onerror fires for CORS/404 too — treat any response as online
+    setStatus(true);
+  };
+  img.src = url;
 }
 
 /* ══════════════════════════════════════════
@@ -2706,11 +2803,6 @@ function saveCategory() {
   renderSettingsLists();
   showToast('Category added ✓');
 
-  if (!returnToServiceSheet && state.services.length === 0) {
-    setTimeout(function() { openAddService(); }, 400);
-    return;
-  }
-
   if (returnToServiceSheet) {
     returnToServiceSheet = false;
     document.getElementById('categorySheet').classList.remove('open');
@@ -2803,6 +2895,26 @@ function renderSettingsLists() {
   // Labels toggle
   var labelsToggle = document.getElementById('labelsToggle');
   if (labelsToggle) labelsToggle.checked = state.showLabels;
+
+  // Lock enabled toggle
+  var lockToggle = document.getElementById('lockEnabledToggle');
+  var lockDisabled = localStorage.getItem('pagerr_lock_disabled') === '1';
+  if (lockToggle) {
+    lockToggle.checked = !lockDisabled;
+    var changePinSection = document.getElementById('changePinSection');
+    if (changePinSection) changePinSection.style.display = lockDisabled ? 'none' : 'block';
+  }
+}
+
+function toggleLockEnabled() {
+  var lockToggle = document.getElementById('lockEnabledToggle');
+  var disabled = !lockToggle.checked;
+  localStorage.setItem('pagerr_lock_disabled', disabled ? '1' : '0');
+  var changePinSection = document.getElementById('changePinSection');
+  if (changePinSection) changePinSection.style.display = disabled ? 'none' : 'block';
+  var lockBtn = document.getElementById('lockBtn');
+  if (lockBtn) lockBtn.style.display = disabled ? 'none' : 'flex';
+  showToast(disabled ? 'Lock screen disabled' : 'Lock screen enabled');
 }
 
 function deleteCategory(id) {
