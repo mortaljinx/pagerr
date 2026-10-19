@@ -4,7 +4,6 @@
 
 ## [3.0.0] - 2026-10-19
 
-This release also includes everything from 2.2.0 and 2.2.1 (listed below), which were never published separately — including the sync codes, the PIN and import hardening, and the removal of auto-login.
 
 ### Added
 - **New settings panel** — five tabs (Appearance, Dashboard, Security, Sync, About) instead of one long scroll. Controls are grouped into rows with a short description where it helps
@@ -107,4 +106,3 @@ This release also includes everything from 2.2.0 and 2.2.1 (listed below), which
 - Docker Compose deployment with nginx
 
 [3.0.0]: https://github.com/mortaljinx/pagerr/releases/tag/v3.0.0
-[2.2.1]: https://github.com/mortaljinx/pagerr/releases/tag/v2.2.1
