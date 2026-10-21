@@ -2,8 +2,25 @@
 
 ---
 
-## [3.0.0] - 2026-10-19
+## [3.1.0] - 2026-10-21
 
+### Added
+- **Sync links** — after you create a sync code, Pagerr also makes a link you can send to yourself in any chat or note. Opening it on another device asks for the passphrase and imports the dashboard. The data sits after the `#` in the address, so it is never sent to any server. You can change the address in the link for a device that uses a different one (for example a LAN IP instead of Tailscale), and the Share button appears where the browser supports it
+- **Much shorter sync codes and links** — the dashboard is compressed before it is encrypted, so a typical code is about 80% smaller (a 30-service dashboard dropped from roughly 8,300 characters to about 1,600). New codes start with `PAGERR3:`; older `PAGERR2:` codes still import. Browsers without compression support quietly fall back to the older format
+- **Quick connect** — on the receiving device tap **Receive from another device** and a QR code appears; scan it with your other device's camera, tap Send, and the dashboard moves across with no typing and no passphrase. It uses a tiny in-memory mailbox on your own Pagerr server (new `relay/`, included in the Docker image), is encrypted with a random key that never leaves the two devices, and is deleted as soon as it is collected. When it is available the manual sync code and link options are hidden to keep Settings tidy; if the server doesn't have the helper, Quick connect doesn't appear and the code and link options show instead
+- Passphrase dialogs (export/import and sync link) now have proper styling
+- The import box now accepts a sync link as well as a sync code
+- A sync link opened on a device with a PIN waits until you have unlocked, so a link can never bypass the lock
+
+### Fixed
+- **Copy buttons now really copy on plain-HTTP addresses.** Browsers block the modern clipboard API outside HTTPS, so the copy buttons only selected the text. Pagerr now falls back to the older copy method that works on HTTP, and Quick connect gets a Copy link button too
+
+### Changed
+- **Larger, easier-to-read text.** The smallest text (settings hints, category labels, Reorder, buttons and badges) has been raised by 2px, service names are a little bigger at every text size, and the layout was rechecked on narrow 360px phones. The first settings tab is now called Display so it fits
+- **New built-in font.** Pagerr now uses Inter, embedded in the single file, instead of DM Sans and DM Mono from Google Fonts. Text is cleaner and more modern, nothing is downloaded, and the page no longer contacts Google Fonts (the Content Security Policy no longer allows it)
+- The Docker image is now built in two stages (it compiles the relay) and its security headers allow requests to the server itself (`connect-src 'self'`)
+
+## [3.0.0] - 2026-10-19
 
 ### Added
 - **New settings panel** — five tabs (Appearance, Dashboard, Security, Sync, About) instead of one long scroll. Controls are grouped into rows with a short description where it helps
@@ -105,4 +122,5 @@
 - Custom server logo and name
 - Docker Compose deployment with nginx
 
+[3.1.0]: https://github.com/mortaljinx/pagerr/releases/tag/v3.1.0
 [3.0.0]: https://github.com/mortaljinx/pagerr/releases/tag/v3.0.0

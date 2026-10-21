@@ -39,11 +39,12 @@ Built for Tailscale. Works behind any reverse proxy.
 - **Service status dots** — live green/red indicator on each card showing if the service is reachable
 - **Categories** — organise services into labelled groups
 - **Reorder** — tap Reorder (or use Settings → Dashboard) to rearrange services and swap across categories
-- **Copy-paste sync** — generate an encrypted sync code on one device and paste it on another. No files, no cloud, no accounts
+- **Quick connect** — show a QR on one device, scan it with another, and your dashboard moves across through your own server. Also sync links and compressed copy-paste codes. No cloud, no accounts
 - **Encrypted JSON backup** — export and import your full config with password protection
 - **Light, dark or auto theme** — Auto follows your device and switches live
 - **Accent colours** — six colours that recolour buttons, toggles and highlights
-- **Tabbed settings** — Appearance, Dashboard, Security, Sync and About, with a consistent SVG icon set
+- **Tabbed settings** — Display, Dashboard, Security, Sync and About, with a consistent SVG icon set
+- **Modern built-in font** — Inter is embedded in the single file, so there are no font downloads and it looks the same offline
 - **Fast icons** — icons are downloaded once and cached in your browser, so unlocking and reloading are instant (and work offline)
 - **Customisable display** — icon size, text size, toggleable service names
 - **Custom branding** — upload your own server logo and name
@@ -108,15 +109,25 @@ If you mount your own `index.html` into the container, run `docker restart pager
 
 ## Sync Between Devices
 
-Settings → **Sync** → enter a passphrase → **Generate Sync Code**.
+There are three ways to move your dashboard to another device. None of them need a cloud account, and your service credentials are never included (Pagerr doesn't store any).
 
-A code starting with `PAGERR2:` (HTTPS) or `PAGERR2X:` (HTTP) will appear. Copy it — paste it anywhere: iMessage, Notes, Signal, email. A `PAGERR2:` (AES) code can only be imported on an HTTPS address; a `PAGERR2X:` code imports anywhere. When syncing between plain-HTTP addresses, generate and import on HTTP on both sides. Sync codes don't include your server logo — upload it on each device.
+### Quick connect (Docker image)
 
-On the other device: Settings → **Sync** → paste the code → enter the same passphrase → **Import from Code**.
+On the device that should **receive** the dashboard: Settings → **Sync** → **Receive from another device**. A QR code appears. Point your other device's camera at it, open the link, tap **Send**, and the dashboard arrives and replaces the one on the receiving device. No typing and no passphrase.
 
-The sync code contains your entire config — services, categories, settings, server name and logo — encrypted with your passphrase.
+If your two devices open Pagerr at different addresses (for example a LAN IP on one and a Tailscale address on the other), set the address box above the button to the one your *sending* device normally uses, so it finds its own dashboard.
 
-> PIN and biometric are not synced. Set those fresh on each device.
+How it works: the QR holds a one-time ID and a random key. The sending device encrypts its dashboard with the key (which never leaves the two devices) and drops it in a short-lived mailbox on your own server; the receiving device collects it and the mailbox is deleted. Quick connect needs the official Docker image, which includes a tiny helper for the mailbox. When Quick connect is available, the manual sync code and link options are hidden to keep Settings simple. If your server doesn't have the helper (for example you serve only `index.html` from your own web server), Quick connect doesn't appear and the sync link and sync code below take its place.
+
+### Sync link
+
+Settings → **Sync** → enter a passphrase → **Create sync code**. Under the code is a **link**. Send it to yourself in any chat or note and open it on the other device; Pagerr asks for the passphrase and imports. The data sits after the `#` in the address, so it is never sent to any server. Don't send the passphrase in the same message.
+
+### Sync code
+
+The same screen shows a code starting with `PAGERR3:` (HTTPS) or `PAGERR3X:` (plain HTTP). Paste it into **Import a code** on the other device and enter the same passphrase. Older `PAGERR2:` codes still import. AES-encrypted codes can only be imported on an HTTPS address; `X` codes import anywhere. Sync codes and links are compressed before encryption, so a typical dashboard is a couple of thousand characters.
+
+> The server logo, PIN and biometric are not synced. Set those fresh on each device.
 
 ---
 
@@ -198,7 +209,7 @@ Pagerr is a convenience lock for a private dashboard, **not** a replacement for 
 - Sync codes and imports are validated: only `http://` and `https://` service URLs are accepted and all text is escaped, so a malicious file cannot run script. Only import files and codes you created yourself
 
 ### Third-party requests
-Icons are downloaded once and then served from a cache in your browser, so these requests happen only for new or refreshed icons. To show icons and fonts, the page fetches from `fonts.googleapis.com`, `cdn.jsdelivr.net`, `raw.githubusercontent.com` and `www.google.com` (favicon fallback). These requests reveal your IP address and which well-known app icons are shown — never your own URLs or login details. Custom icon URLs you enter are fetched from wherever you point them.
+Icons are downloaded once and then served from a cache in your browser, so these requests happen only for new or refreshed icons. To show icons, the page fetches from `cdn.jsdelivr.net`, `raw.githubusercontent.com` and `www.google.com` (favicon fallback). The font (Inter) is built into the page, so there are no font requests. These requests reveal your IP address and which well-known app icons are shown — never your own URLs or login details. Custom icon URLs you enter are fetched from wherever you point them.
 
 ### Hardening your deployment
 - Serve over HTTPS (Tailscale does this automatically; with a reverse proxy, terminate TLS there and add HSTS)
